@@ -701,12 +701,14 @@ async function startCase() {
     try {
       const r = await apiStart(dkey, mode);
       sid = r.session_id || r.id;
-      if(r.greeting)      greet        = r.greeting;
-      if(r.patient_name)  patientName  = r.patient_name;
-      if(r.patient_age)   patientAge   = r.patient_age;
-      if(r.patient_gender)patientGender= r.patient_gender;
+      if(r.greeting) greet = r.greeting;
+      // Бэк возвращает patient.fio / patient.age / patient.gender
+      const p = r.patient || {};
+      if(p.fio)    patientName   = p.fio;
+      if(p.age)    patientAge    = p.age;
+      if(p.gender) patientGender = p.gender === 'Ж' ? 'Женщина' : p.gender === 'М' ? 'Мужчина' : p.gender;
       S.apiOk = true; el('errBanner').classList.add('hidden');
-    } catch { S.apiOk=false; el('errBanner').classList.remove('hidden'); }
+    } catch(e) { console.error('apiStart failed:', e); S.apiOk=false; el('errBanner').classList.remove('hidden'); }
   } else { S.apiOk=false; el('errBanner').classList.remove('hidden'); }
   S.patientName = patientName;
 
@@ -751,21 +753,27 @@ async function sendMsg() {
   inp.value=''; inp.style.height=''; el('sendBtn').disabled=true;
   addMsg(txt,'user'); updateProg(txt);
   showTyping(0);
+  let reply;
   try {
-    let reply;
     if(S.sid && S.apiOk) {
-      try { reply = await apiMsg(S.sid, txt); }
-      catch(e) {
+      try {
+        const raw = await apiMsg(S.sid, txt);
+        // Бэк возвращает patient_reply (строку)
+        reply = (typeof raw === 'string') ? raw : (raw && (raw.patient_reply || raw.reply || raw.text));
+      } catch(e) {
         console.error('apiMsg failed:', e);
         S.apiOk=false; el('errBanner').classList.remove('hidden');
-        await sleep(700+Math.random()*1000); reply=mockReply(txt);
       }
-    } else { await sleep(700+Math.random()*1200); reply=mockReply(txt); }
-    hideTyping();
-    if(reply) { S.lastBotMsgs.push(reply); addMsg(reply,'bot'); }
+    }
+    if(!reply) { await sleep(700+Math.random()*1200); reply=mockReply(txt); }
   } catch(e) {
-    hideTyping(); console.error('sendMsg error:', e);
-  } finally { el('sendBtn').disabled=false; }
+    console.error('sendMsg error:', e);
+    reply = mockReply(txt);
+  } finally {
+    hideTyping();
+    el('sendBtn').disabled=false;
+  }
+  if(reply) { S.lastBotMsgs.push(reply); addMsg(reply,'bot'); }
 }
 
 function quickQ(t) { el('msgInput').value=t; sendMsg(); }
