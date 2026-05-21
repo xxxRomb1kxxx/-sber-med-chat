@@ -553,9 +553,12 @@ const DISEASES = [
 const DM = Object.fromEntries(DISEASES.map(d=>[d.key,d]));
 
 // ─── STATE ────────────────────────────────────────────
-const S = { sid:null, active:false, disease:null, mode:null, qCount:0, t0:null, tmr:null, apiOk:true, patientName:null, lastBotMsgs:[] };
+const S = { sid:null, active:false, disease:null, mode:null, qCount:0, t0:null, tmr:null, apiOk:true, patientName:null, lastBotMsgs:[], currentCaseId:null };
 const CASES = (() => { try { return JSON.parse(localStorage.getItem('smii_cases')||'[]'); } catch { return []; } })();
 const saveC = () => localStorage.setItem('smii_cases', JSON.stringify(CASES));
+// Хранилище сообщений: { caseId: [{role, txt, time}] }
+const MSGS_STORE = (() => { try { return JSON.parse(localStorage.getItem('smii_msgs')||'{}'); } catch { return {}; } })();
+const saveMsgs = () => localStorage.setItem('smii_msgs', JSON.stringify(MSGS_STORE));
 let uid = localStorage.getItem('smii_uid') || ('u'+Math.random().toString(36).slice(2,8));
 localStorage.setItem('smii_uid', uid);
 let mockIdx = 0;
@@ -652,11 +655,82 @@ function renderCases(f='all') {
   let cc = f==='all' ? CASES : CASES.filter(c=>c.mode===f);
   if(!cc.length) { lst.innerHTML='<div class="sb-empty">Нет кейсов.<br>Нажмите «Новый кейс»</div>'; return; }
   lst.innerHTML = cc.slice().reverse().map(c=>`
-    <div class="case-row ${c.active?'active':''}" data-t="${c.mode}">
+    <div class="case-row ${c.id===S.currentCaseId?'active':''}" data-t="${c.mode}" onclick="selectCase(${c.id})" style="cursor:pointer">
       <div class="case-ico">${c.icon}</div>
-      <div class="case-inf"><div class="case-name">${esc(c.name)}</div><div class="case-meta">${c.date}${c.score!=null?' · '+c.score+'%':''}</div></div>
+      <div class="case-inf">
+        <div class="case-name">${esc(c.name)}</div>
+        <div class="case-meta">${c.date}${c.score!=null?' · <b>'+c.score+'%</b>':c.active?' · в процессе':''}</div>
+      </div>
       <span class="case-badge ${c.mode==='training'?'bt':'bc'}">${c.mode==='training'?'Тренировка':'Контроль'}</span>
     </div>`).join('');
+}
+
+function selectCase(id) {
+  const c = CASES.find(x=>x.id===id);
+  if(!c) return;
+  closeSB();
+  goPage('chat', null);
+  // Активный кейс — просто переключаемся на него
+  if(c.active && id === S.currentCaseId) return;
+  // Завершённый кейс — показываем историю в режиме просмотра
+  viewCase(c);
+}
+
+function viewCase(c) {
+  const msgs = MSGS_STORE[c.id] || [];
+  el('chatEmpty').classList.add('hidden');
+  el('chatActive').classList.remove('hidden');
+  el('errBanner').classList.add('hidden');
+  // Шапка
+  el('pAvatar').textContent = c.icon;
+  el('pName').textContent = c.patientName || c.name;
+  el('pStatus').textContent = c.score!=null ? `Завершён · ${c.score}%` : 'Прерван';
+  // Рендерим сообщения
+  const icon = c.icon;
+  el('msgs').innerHTML = `
+    <div class="mrow sys"><div class="bbl">📂 История: ${esc(c.name)} · ${c.date}</div></div>
+    ${msgs.map(m => {
+      if(m.role==='user') return `<div class="mrow user"><div class="mav u">ВЫ</div><div><div class="bbl">${esc(m.txt)}</div><div class="mtime">${m.time}</div></div></div>`;
+      if(m.role==='bot')  return `<div class="mrow bot"><div class="mav b">${icon}</div><div><div class="bbl">${esc(m.txt)}</div><div class="mtime">${m.time}</div></div></div>`;
+      return `<div class="mrow sys"><div class="bbl">${esc(m.txt)}</div></div>`;
+    }).join('')}
+    <div class="typing-row" id="typingRow"></div>`;
+  // Кнопки — только навигация, без ввода
+  el('qbtns').innerHTML = `
+    <button class="qbtn fin" onclick="backToActive()">← Текущий кейс</button>
+    <button class="qbtn" onclick="openModal()">🎯 Новый кейс</button>`;
+  el('msgInput').disabled = true;
+  el('sendBtn').disabled = true;
+  el('msgInput').placeholder = 'Режим просмотра истории';
+  scrollB();
+}
+
+function backToActive() {
+  el('msgInput').disabled = false;
+  el('sendBtn').disabled = false;
+  el('msgInput').placeholder = 'Задайте вопрос пациенту...';
+  if(!S.active) {
+    el('chatEmpty').classList.remove('hidden');
+    el('chatActive').classList.add('hidden');
+    return;
+  }
+  // Восстанавливаем активный чат
+  el('pName').textContent = S.patientName || S.disease?.patient || '';
+  el('pStatus').textContent = `Ожидает вопроса · ${S.disease?.name||''}`;
+  // Перерисовываем сообщения активной сессии из MSGS_STORE
+  const msgs = MSGS_STORE[S.currentCaseId] || [];
+  const icon = S.disease?.icon || '🧑';
+  el('msgs').innerHTML = `
+    ${msgs.map(m => {
+      if(m.role==='user') return `<div class="mrow user"><div class="mav u">ВЫ</div><div><div class="bbl">${esc(m.txt)}</div><div class="mtime">${m.time}</div></div></div>`;
+      if(m.role==='bot')  return `<div class="mrow bot"><div class="mav b">${icon}</div><div><div class="bbl">${esc(m.txt)}</div><div class="mtime">${m.time}</div></div></div>`;
+      return `<div class="mrow sys"><div class="bbl">${esc(m.txt)}</div></div>`;
+    }).join('')}
+    <div class="typing-row" id="typingRow"><div class="mav b" id="typingAv">${icon}</div><div class="typing-bbl"><div class="tdot"></div><div class="tdot"></div><div class="tdot"></div></div></div>`;
+  setQbtns(S.qCount===0?'start':'');
+  if(S.qCount>0) updateQbtns();
+  scrollB();
+  renderCases();
 }
 function filterCases(f,btn) {
   document.querySelectorAll('.sb-tab').forEach(t=>t.classList.remove('active'));
@@ -712,6 +786,8 @@ async function startCase() {
   S.patientName = patientName;
 
   btn.innerHTML = 'Начать кейс →'; btn.disabled=false; closeModal();
+  el('msgInput').disabled = false; el('sendBtn').disabled = false;
+  el('msgInput').placeholder = 'Задайте вопрос пациенту...';
 
   S.sid=sid; S.active=true; S.disease=d; S.mode=mode; S.qCount=0; S.t0=Date.now(); mockIdx=0;
   clearInterval(S.tmr);
@@ -736,7 +812,9 @@ async function startCase() {
 
   setQbtns('start');
 
-  const entry = { id:Date.now(), key:dkey, name:d.name, icon:d.icon, mode, date:new Date().toLocaleDateString('ru',{day:'numeric',month:'short'}), active:true, score:null };
+  const entry = { id:Date.now(), key:dkey, name:d.name, icon:d.icon, mode, date:new Date().toLocaleDateString('ru',{day:'numeric',month:'short'}), active:true, score:null, patientName };
+  S.currentCaseId = entry.id;
+  MSGS_STORE[entry.id] = [];
   CASES.push(entry); saveC(); renderCases();
 
   goPage('chat', null);
@@ -875,7 +953,7 @@ function updateQbtns() {
    <button class="qbtn red" onclick="abortCase()">✕ Прервать</button>`;
 }
 
-function addMsg(txt,role) {
+function addMsg(txt, role) {
   const msgs=el('msgs'), tr=el('typingRow'), t=nowT();
   let html='';
   if(role==='user') html=`<div class="mrow user"><div class="mav u">ВЫ</div><div><div class="bbl">${esc(txt)}</div><div class="mtime">${t} <span class="tick">✓</span></div></div></div>`;
@@ -884,6 +962,12 @@ function addMsg(txt,role) {
   else if(role==='html') html=`<div class="mrow bot" style="max-width:92%"><div class="mav b">🏥</div><div>${txt}</div></div>`;
   const d=document.createElement('div'); d.innerHTML=html;
   msgs.insertBefore(d.firstElementChild, tr); scrollB();
+  // Сохраняем в хранилище (кроме html-отчёта)
+  if(S.currentCaseId && (role==='user'||role==='bot'||role==='sys')) {
+    if(!MSGS_STORE[S.currentCaseId]) MSGS_STORE[S.currentCaseId]=[];
+    MSGS_STORE[S.currentCaseId].push({role, txt, time:t, icon: S.disease?.icon});
+    saveMsgs();
+  }
 }
 
 async function showTyping(ms) { const t=el('typingRow'); t.classList.add('on'); scrollB(); if(ms>0) await sleep(ms); }
