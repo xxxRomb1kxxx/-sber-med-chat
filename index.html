@@ -439,7 +439,6 @@ html, body { height: 100%; overflow: hidden; font-family: -apple-system, BlinkMa
         </div>
         <div class="pp-sec">
           <div class="pp-label">Прогресс</div>
-          <div class="prg-lbl"><span>Охват анамнеза</span><span id="ppPct">0%</span></div>
           <div class="prg-bar"><div class="prg-fill" id="ppFill" style="width:0%"></div></div>
         </div>
         <div class="pp-sec">
@@ -727,7 +726,7 @@ async function startCase() {
   el('ppMeta').textContent=patientAge?`${patientAge} лет · ${patientGender}`:'—';
   el('ppDisease').textContent=`${d.icon} ${d.name}`;
   el('ppMode').textContent=mode==='training'?'Тренировка':'Контроль';
-  el('ppQ').textContent='0'; el('ppDur').textContent='0 мин'; el('ppPct').textContent='0%'; el('ppFill').style.width='0%';
+  el('ppQ').textContent='0'; el('ppDur').textContent='0 мин'; el('ppFill').style.width='0%';
   el('typingAv').textContent=d.icon;
 
   el('msgs').innerHTML = `<div class="typing-row" id="typingRow">
@@ -859,7 +858,7 @@ function updateProg(userText='') {
   S.qCount++;
   el('ppQ').textContent=S.qCount;
   const p=Math.min(10+S.qCount*9,95);
-  el('ppPct').textContent=p+'%'; el('ppFill').style.width=p+'%';
+  el('ppFill').style.width=p+'%';
   updateQbtns();
 }
 
@@ -915,11 +914,20 @@ async function finishCase() {
   if(S.sid&&S.apiOk) try{data=await apiFinish(S.sid);}catch{}
   const pct=Math.min(10+S.qCount*9,95), lang=74+Math.round(Math.random()*21), total=Math.round(pct*.7+lang*.3);
   const [sc,sb,sbo]= total>=80?['var(--green)','var(--green-l)','var(--green)']:total>=60?['#F59E0B','#FFF8E1','#F59E0B']:['#EF5350','#FFEBEE','#EF5350'];
-  const attrs=(data?.attributes)||[
-    {n:'Основные жалобы',ok:true},{n:'Анамнез заболевания',ok:S.qCount>=2},
-    {n:'Семейный анамнез',ok:S.qCount>=3},{n:'Динамика симптомов',ok:S.qCount>=4},
-    {n:'Текущие препараты',ok:S.qCount>=5},{n:'Гликемический профиль',ok:S.qCount>=7},
-  ];
+  // Нормализуем атрибуты: бэк может вернуть {name,found}, {n,ok}, или массив строк
+  const rawAttrs = data?.attributes || data?.checklist || null;
+  const attrs = rawAttrs
+    ? rawAttrs.map(a => typeof a === 'string'
+        ? {n: a, ok: false}
+        : {n: a.name || a.n || a.label || a.attribute || String(a), ok: !!(a.found ?? a.ok ?? a.checked ?? a.present)})
+    : [
+        {n:'Основные жалобы',       ok: S.qCount>=1},
+        {n:'Анамнез заболевания',   ok: S.qCount>=2},
+        {n:'Семейный анамнез',      ok: S.qCount>=3},
+        {n:'Динамика симптомов',    ok: S.qCount>=4},
+        {n:'Текущие препараты',     ok: S.qCount>=5},
+        {n:'Гликемический профиль', ok: S.qCount>=7},
+      ];
   hideTyping();
   addMsg(`<div class="rep-card">
     <div class="rep-tabs">
