@@ -88,7 +88,11 @@ html, body { height: 100%; overflow: hidden; font-family: -apple-system, BlinkMa
 .sb-tab { flex: 1; padding: 5px 4px; border-radius: 9px; font-size: 12px; font-weight: 500; text-align: center; border: none; background: transparent; color: var(--gray-t); cursor: pointer; font-family: inherit; transition: all .2s; }
 .sb-tab.active { background: #fff; color: var(--green); box-shadow: 0 1px 3px rgba(0,0,0,.1); }
 .sb-list { flex: 1; overflow-y: auto; padding: 6px 0; }
-.case-row { padding: 9px 14px; display: flex; align-items: center; gap: 9px; cursor: pointer; transition: background .15s; position: relative; }
+.sb-list.fading { opacity: 0; transform: translateY(4px); }
+.sb-list { transition: opacity .18s ease, transform .18s ease; }
+.case-row { padding: 9px 14px; display: flex; align-items: center; gap: 9px; cursor: pointer; transition: background .15s, opacity .2s, transform .2s; position: relative; }
+@keyframes caseIn { from { opacity:0; transform:translateX(-8px); } to { opacity:1; transform:translateX(0); } }
+.case-row.animating { animation: caseIn .22s ease-out both; }
 .case-row:hover { background: var(--gray); }
 .case-row.active { background: var(--green-l); }
 .case-row.active::before { content:''; position:absolute; left:0; top:4px; bottom:4px; width:3px; background:var(--green); border-radius:0 3px 3px 0; }
@@ -732,9 +736,21 @@ function backToActive() {
   scrollB();
   renderCases();
 }
-function filterCases(f,btn) {
+function filterCases(f, btn) {
   document.querySelectorAll('.sb-tab').forEach(t=>t.classList.remove('active'));
-  btn.classList.add('active'); renderCases(f);
+  btn.classList.add('active');
+  const lst = el('caseList');
+  lst.classList.add('fading');
+  setTimeout(() => {
+    renderCases(f);
+    lst.classList.remove('fading');
+    // Анимируем каждую карточку с задержкой
+    lst.querySelectorAll('.case-row').forEach((row, i) => {
+      row.classList.add('animating');
+      row.style.animationDelay = `${i * 40}ms`;
+      row.addEventListener('animationend', () => row.classList.remove('animating'), { once: true });
+    });
+  }, 170);
 }
 function clearHistory() {
   if(!confirm('Очистить всю историю кейсов?')) return;
