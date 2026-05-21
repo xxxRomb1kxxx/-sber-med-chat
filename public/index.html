@@ -101,9 +101,11 @@ html, body { height: 100%; overflow: hidden; font-family: -apple-system, BlinkMa
 .bt { background: #FFF3E0; color: #E65100; }
 .bc { background: #E8EAF6; color: #3949AB; }
 .sb-empty { padding: 28px 14px; text-align: center; font-size: 13px; color: var(--gray-t); line-height: 1.5; }
-.sb-foot { padding: 10px 12px; border-top: 1px solid var(--border); }
+.sb-foot { padding: 10px 12px; border-top: 1px solid var(--border); display: flex; flex-direction: column; gap: 6px; }
 .new-btn { width: 100%; padding: 10px; border-radius: var(--r-md); background: var(--green); color: #fff; border: none; font-size: 14px; font-weight: 600; cursor: pointer; font-family: inherit; transition: background .15s; display: flex; align-items: center; justify-content: center; gap: 6px; }
 .new-btn:hover { background: var(--green-d); }
+.clear-btn { width: 100%; padding: 7px; border-radius: var(--r-md); background: transparent; color: #C62828; border: 1px solid #FFCDD2; font-size: 13px; font-weight: 500; cursor: pointer; font-family: inherit; transition: all .15s; }
+.clear-btn:hover { background: #FFEBEE; }
 
 /* pages */
 .page { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
@@ -366,7 +368,10 @@ html, body { height: 100%; overflow: hidden; font-family: -apple-system, BlinkMa
         </div>
       </div>
       <div class="sb-list" id="caseList"><div class="sb-empty">Нет кейсов.<br>Нажмите «Новый кейс»</div></div>
-      <div class="sb-foot"><button class="new-btn" onclick="openModal()"><span style="font-size:18px">+</span> Новый кейс</button></div>
+      <div class="sb-foot">
+        <button class="new-btn" onclick="openModal()"><span style="font-size:18px">+</span> Новый кейс</button>
+        <button class="clear-btn" onclick="clearHistory()">🗑 Очистить историю</button>
+      </div>
     </aside>
 
     <!-- CHAT PAGE -->
@@ -549,7 +554,7 @@ const DISEASES = [
 const DM = Object.fromEntries(DISEASES.map(d=>[d.key,d]));
 
 // ─── STATE ────────────────────────────────────────────
-const S = { sid:null, active:false, disease:null, mode:null, qCount:0, t0:null, tmr:null, apiOk:true };
+const S = { sid:null, active:false, disease:null, mode:null, qCount:0, t0:null, tmr:null, apiOk:true, patientName:null, lastBotMsgs:[] };
 const CASES = (() => { try { return JSON.parse(localStorage.getItem('smii_cases')||'[]'); } catch { return []; } })();
 const saveC = () => localStorage.setItem('smii_cases', JSON.stringify(CASES));
 let uid = localStorage.getItem('smii_uid') || ('u'+Math.random().toString(36).slice(2,8));
@@ -658,6 +663,10 @@ function filterCases(f,btn) {
   document.querySelectorAll('.sb-tab').forEach(t=>t.classList.remove('active'));
   btn.classList.add('active'); renderCases(f);
 }
+function clearHistory() {
+  if(!confirm('Очистить всю историю кейсов?')) return;
+  CASES.length = 0; saveC(); renderCases(); renderStats();
+}
 
 // ─── MODAL ────────────────────────────────────────────
 function openModal() {
@@ -687,11 +696,19 @@ async function startCase() {
 
   if(S.sid) await apiDel(S.sid);
 
-  let sid = null, greet = d.greet;
+  let sid = null, greet = d.greet, patientName = d.patient, patientAge = d.age, patientGender = d.gender;
   if(HAS_BACKEND) {
-    try { const r = await apiStart(dkey, mode); sid = r.session_id||r.id; if(r.greeting) greet=r.greeting; S.apiOk=true; el('errBanner').classList.add('hidden'); }
-    catch { S.apiOk=false; el('errBanner').classList.remove('hidden'); }
+    try {
+      const r = await apiStart(dkey, mode);
+      sid = r.session_id || r.id;
+      if(r.greeting)      greet        = r.greeting;
+      if(r.patient_name)  patientName  = r.patient_name;
+      if(r.patient_age)   patientAge   = r.patient_age;
+      if(r.patient_gender)patientGender= r.patient_gender;
+      S.apiOk = true; el('errBanner').classList.add('hidden');
+    } catch { S.apiOk=false; el('errBanner').classList.remove('hidden'); }
   } else { S.apiOk=false; el('errBanner').classList.remove('hidden'); }
+  S.patientName = patientName;
 
   btn.innerHTML = 'Начать кейс →'; btn.disabled=false; closeModal();
 
@@ -702,10 +719,10 @@ async function startCase() {
   // UI
   el('chatEmpty').classList.add('hidden');
   const ca = el('chatActive'); ca.classList.remove('hidden');
-  el('pAvatar').textContent=d.icon; el('pName').textContent=d.patient;
+  el('pAvatar').textContent=d.icon; el('pName').textContent=patientName;
   el('pStatus').textContent=`Ожидает вопроса · ${d.name}`;
-  el('ppAv').textContent=d.icon; el('ppName').textContent=d.patient;
-  el('ppMeta').textContent=d.age?`${d.age} лет · ${d.gender}`:'—';
+  el('ppAv').textContent=d.icon; el('ppName').textContent=patientName;
+  el('ppMeta').textContent=patientAge?`${patientAge} лет · ${patientGender}`:'—';
   el('ppDisease').textContent=`${d.icon} ${d.name}`;
   el('ppMode').textContent=mode==='training'?'Тренировка':'Контроль';
   el('ppQ').textContent='0'; el('ppDur').textContent='0 мин'; el('ppPct').textContent='0%'; el('ppFill').style.width='0%';
@@ -732,27 +749,118 @@ async function sendMsg() {
   const txt = inp.value.trim();
   if(!txt||!S.active) return;
   inp.value=''; inp.style.height=''; el('sendBtn').disabled=true;
-  addMsg(txt,'user'); updateProg();
+  addMsg(txt,'user'); updateProg(txt);
+  showTyping(0);
   try {
-    showTyping(0);
     let reply;
     if(S.sid && S.apiOk) {
       try { reply = await apiMsg(S.sid, txt); }
-      catch { S.apiOk=false; el('errBanner').classList.remove('hidden'); await sleep(700+Math.random()*1000); reply=mockReply(txt); }
+      catch(e) {
+        console.error('apiMsg failed:', e);
+        S.apiOk=false; el('errBanner').classList.remove('hidden');
+        await sleep(700+Math.random()*1000); reply=mockReply(txt);
+      }
     } else { await sleep(700+Math.random()*1200); reply=mockReply(txt); }
-    hideTyping(); addMsg(reply,'bot');
+    hideTyping();
+    if(reply) { S.lastBotMsgs.push(reply); addMsg(reply,'bot'); }
+  } catch(e) {
+    hideTyping(); console.error('sendMsg error:', e);
   } finally { el('sendBtn').disabled=false; }
 }
 
 function quickQ(t) { el('msgInput').value=t; sendMsg(); }
 function onKey(e) { if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendMsg();} }
 function autoResize(el2) { el2.style.height='auto'; el2.style.height=Math.min(el2.scrollHeight,96)+'px'; }
-function updateProg() {
+
+// Подсказки по заболеванию и контексту диалога
+const HINTS = {
+  diabetes: [
+    ['Жалобы','Расскажите, что именно вас беспокоит?'],
+    ['Жажда','Сколько жидкости в день выпиваете?'],
+    ['Мочеиспускание','Как часто ходите в туалет ночью?'],
+    ['Зрение','Изменилось ли зрение в последнее время?'],
+    ['Сахар крови','Измеряли ли уровень глюкозы в крови?'],
+    ['Вес','Какой у вас рост и вес? Изменился ли вес?'],
+    ['Наследственность','Есть ли диабет у родственников?'],
+    ['Давление','Измеряете давление? Какие цифры?'],
+    ['Лекарства','Какие препараты принимаете постоянно?'],
+    ['Аллергии','Есть ли аллергии на лекарства?'],
+  ],
+  anemia: [
+    ['Жалобы','На что жалуетесь?'],
+    ['Слабость','Как долго чувствуете слабость?'],
+    ['Одышка','Есть ли одышка при нагрузке?'],
+    ['Питание','Как питаетесь? Едите мясо?'],
+    ['Кровотечения','Бывают ли кровотечения, обильные менструации?'],
+    ['Цвет кожи','Замечали ли бледность, желтушность?'],
+    ['Ногти/волосы','Ломаются ли ногти, выпадают волосы?'],
+    ['Анализы','Когда последний раз сдавали общий анализ крови?'],
+    ['Лекарства','Принимаете ли препараты железа?'],
+    ['Хронические болезни','Есть ли хронические заболевания ЖКТ?'],
+  ],
+  tuberculosis: [
+    ['Жалобы','На что жалуетесь?'],
+    ['Кашель','Как давно кашляете? Есть мокрота?'],
+    ['Кровохарканье','Бывало ли кровохарканье?'],
+    ['Температура','Повышается ли температура, особенно вечером?'],
+    ['Ночная потливость','Бывает ли ночная потливость?'],
+    ['Похудание','Снизился ли вес за последние месяцы?'],
+    ['Контакты','Были ли контакты с больными туберкулёзом?'],
+    ['Флюорография','Когда последний раз делали флюорографию?'],
+    ['Проживание','Где проживаете? Условия жизни?'],
+    ['Лекарства','Принимаете ли сейчас какие-то препараты?'],
+  ],
+  appendicitis: [
+    ['Боль','Где болит? Покажите точно.'],
+    ['Начало боли','Когда началась боль? Как развивалась?'],
+    ['Характер боли','Боль постоянная или приступами?'],
+    ['Тошнота/рвота','Была ли тошнота или рвота?'],
+    ['Температура','Измеряли температуру?'],
+    ['Стул','Был ли стул сегодня? Нормальный?'],
+    ['Аппетит','Есть ли аппетит?'],
+    ['Подобное раньше','Бывало ли подобное раньше?'],
+    ['Последний приём пищи','Когда последний раз ели?'],
+    ['Аллергии','Аллергии на лекарства есть?'],
+  ],
+  epilepsy: [
+    ['Приступы','Опишите, как выглядит приступ?'],
+    ['Частота','Как часто бывают приступы?'],
+    ['Первый приступ','Когда был первый приступ?'],
+    ['Потеря сознания','Теряете ли сознание во время приступа?'],
+    ['После приступа','Как себя чувствуете после приступа?'],
+    ['Травмы головы','Были ли травмы головы в прошлом?'],
+    ['Провокаторы','Что провоцирует приступ — стресс, недосып?'],
+    ['Лечение','Принимаете ли противоэпилептические препараты?'],
+    ['ЭЭГ/МРТ','Делали ли ЭЭГ или МРТ головного мозга?'],
+    ['Наследственность','Есть ли эпилепсия у родственников?'],
+  ],
+};
+
+function getContextHints(dkey, qCount) {
+  const hints = HINTS[dkey] || HINTS.diabetes;
+  // Первые 2 вопроса — начальные, дальше по порядку
+  const start = Math.min(qCount, hints.length - 4);
+  const pool = hints.slice(start, start + 4);
+  return pool;
+}
+
+function updateProg(userText='') {
   S.qCount++;
   el('ppQ').textContent=S.qCount;
   const p=Math.min(10+S.qCount*9,95);
   el('ppPct').textContent=p+'%'; el('ppFill').style.width=p+'%';
-  if(S.qCount===3) setQbtns('mid');
+  updateQbtns();
+}
+
+function updateQbtns() {
+  if(!S.disease || !S.active) return;
+  const hints = getContextHints(S.disease.key, S.qCount);
+  const b = el('qbtns');
+  b.innerHTML = hints.map(([label, q]) =>
+    `<button class="qbtn" onclick="quickQ('${q.replace(/'/g,"\\'")}'">${label}</button>`
+  ).join('') +
+  `<button class="qbtn fin" onclick="finishCase()">✅ Завершить</button>
+   <button class="qbtn red" onclick="abortCase()">✕ Прервать</button>`;
 }
 
 function addMsg(txt,role) {
@@ -771,20 +879,18 @@ function hideTyping() { el('typingRow').classList.remove('on'); }
 
 function setQbtns(ph) {
   const b=el('qbtns');
-  if(ph==='start') b.innerHTML=`
-    <button class="qbtn" onclick="quickQ('Добрый день! Присаживайтесь, пожалуйста. На что жалуетесь?')">Приветствие</button>
-    <button class="qbtn" onclick="quickQ('Расскажите, что вас беспокоит?')">Что беспокоит?</button>
-    <button class="qbtn fin" onclick="finishCase()">✅ Завершить</button>
-    <button class="qbtn red" onclick="abortCase()">✕ Прервать</button>`;
-  else if(ph==='mid') b.innerHTML=`
-    <button class="qbtn" onclick="quickQ('Как давно это началось?')">Давно?</button>
-    <button class="qbtn" onclick="quickQ('Измеряли сахар крови?')">Сахар?</button>
-    <button class="qbtn" onclick="quickQ('Есть наследственные заболевания?')">Наследственность</button>
-    <button class="qbtn fin" onclick="finishCase()">✅ Завершить</button>
-    <button class="qbtn red" onclick="abortCase()">✕ Прервать</button>`;
-  else if(ph==='done') b.innerHTML=`
-    <button class="qbtn" onclick="openModal()">🎯 Новый кейс</button>
-    <button class="qbtn" onclick="goPage('stats',null)">📊 Статистика</button>`;
+  if(ph==='start') {
+    b.innerHTML=`
+      <button class="qbtn" onclick="quickQ('Добрый день! Присаживайтесь, пожалуйста. На что жалуетесь?')">Приветствие</button>
+      <button class="qbtn" onclick="quickQ('Расскажите, что именно вас беспокоит?')">Жалобы</button>
+      <button class="qbtn" onclick="quickQ('Как давно появились симптомы?')">Давность</button>
+      <button class="qbtn fin" onclick="finishCase()">✅ Завершить</button>
+      <button class="qbtn red" onclick="abortCase()">✕ Прервать</button>`;
+  } else if(ph==='done') {
+    b.innerHTML=`
+      <button class="qbtn" onclick="openModal()">🎯 Новый кейс</button>
+      <button class="qbtn" onclick="goPage('stats',null)">📊 Статистика</button>`;
+  }
 }
 
 // ─── FINISH ───────────────────────────────────────────
