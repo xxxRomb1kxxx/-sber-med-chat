@@ -2,1445 +2,874 @@
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>СберМедИИ — Тренажёр врача</title>
+<script>window.__API_URL__ = "__API_URL__";</script>
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=SB+Sans+Display:wght@400;500;600;700&display=swap');
+:root {
+  --green: #21A038; --green-d: #1A8230; --green-l: #E8F5EB; --green-m: #4CB86A;
+  --gray: #F7F8FA; --gray-2: #EBEDF0; --gray-3: #C4C8CC; --gray-t: #7E8389;
+  --dark: #1C1C1E; --white: #FFFFFF;
+  --border: rgba(0,0,0,0.08); --shadow: 0 2px 16px rgba(0,0,0,0.08); --shadow-sm: 0 1px 6px rgba(0,0,0,0.06);
+  --r-sm: 8px; --r-md: 12px; --r-lg: 20px; --r-xl: 28px;
+  --nav-h: 60px; --bot-h: 58px;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+html, body { height: 100%; overflow: hidden; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; color: var(--dark); background: var(--gray); }
 
-  :root {
-    --sber-green: #21A038;
-    --sber-green-dark: #1A8230;
-    --sber-green-light: #E8F5EB;
-    --sber-green-mid: #4CB86A;
-    --sber-gray: #F7F8FA;
-    --sber-gray-2: #EBEDF0;
-    --sber-gray-3: #C4C8CC;
-    --sber-gray-text: #7E8389;
-    --sber-dark: #1C1C1E;
-    --sber-dark-2: #2C2C2E;
-    --sber-white: #FFFFFF;
-    --sber-border: rgba(0,0,0,0.08);
-    --sber-shadow: 0 2px 16px rgba(0,0,0,0.08);
-    --sber-shadow-sm: 0 1px 6px rgba(0,0,0,0.06);
-    --radius-sm: 8px;
-    --radius-md: 12px;
-    --radius-lg: 20px;
-    --radius-xl: 28px;
-  }
+/* ── SCREENS ── */
+.screen { position: absolute; inset: 0; display: flex; flex-direction: column; overflow: hidden; }
+.screen.hidden { display: none !important; }
+.hidden { display: none !important; }
 
-  * { box-sizing: border-box; margin: 0; padding: 0; }
+/* ══ WELCOME ══ */
+#welcome {
+  background: linear-gradient(150deg, #F0F9F2 0%, #E8F5EB 50%, #fff 100%);
+  align-items: center; justify-content: center;
+  overflow-y: auto; padding: 32px 20px 48px; gap: 0;
+}
+.wl-logo {
+  width: 88px; height: 88px;
+  background: linear-gradient(135deg, #21A038, #17832E);
+  border-radius: 24px; display: flex; align-items: center; justify-content: center;
+  margin-bottom: 20px; box-shadow: 0 8px 32px rgba(33,160,56,.28);
+}
+.wl-logo svg { width: 48px; height: 48px; }
+.wl-title { font-size: 34px; font-weight: 800; margin-bottom: 10px; text-align: center; }
+.wl-sub { font-size: 16px; color: var(--gray-t); text-align: center; max-width: 340px; line-height: 1.55; margin-bottom: 36px; }
+.wl-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; max-width: 480px; width: 100%; margin-bottom: 36px; }
+.wl-card { background: #fff; border-radius: var(--r-md); padding: 16px; box-shadow: var(--shadow-sm); border: 1px solid var(--border); }
+.wl-card-icon { font-size: 28px; margin-bottom: 8px; }
+.wl-card-title { font-size: 14px; font-weight: 600; margin-bottom: 4px; }
+.wl-card-desc { font-size: 12px; color: var(--gray-t); line-height: 1.4; }
+.wl-cta {
+  width: 100%; max-width: 320px; padding: 16px; border-radius: var(--r-xl);
+  background: var(--green); color: #fff; border: none;
+  font-size: 17px; font-weight: 600; cursor: pointer; font-family: inherit;
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  box-shadow: 0 4px 20px rgba(33,160,56,.35); transition: all .2s;
+}
+.wl-cta:hover { background: var(--green-d); transform: translateY(-1px); }
+.wl-hint { margin-top: 20px; font-size: 12px; color: var(--gray-3); }
 
-  body {
-    font-family: 'SB Sans Display', -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', sans-serif;
-    background: var(--sber-gray);
-    color: var(--sber-dark);
-    height: 100vh;
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-  }
+/* ══ APP ══ */
+#app { flex-direction: column; }
 
-  /* ─── TOP NAV ─── */
-  .topnav {
-    background: var(--sber-white);
-    border-bottom: 1px solid var(--sber-border);
-    padding: 0 24px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    height: 64px;
-    flex-shrink: 0;
-    position: relative;
-    z-index: 10;
-  }
-  .topnav-logo {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    text-decoration: none;
-  }
-  .sber-logo-icon {
-    width: 36px;
-    height: 36px;
-    background: linear-gradient(135deg, #21A038 0%, #17832E 100%);
-    border-radius: 10px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-  }
-  .sber-logo-icon svg { width: 22px; height: 22px; }
-  .topnav-title {
-    font-size: 17px;
-    font-weight: 600;
-    color: var(--sber-dark);
-    letter-spacing: -0.2px;
-  }
-  .topnav-subtitle {
-    font-size: 12px;
-    color: var(--sber-gray-text);
-    font-weight: 400;
-  }
-  .topnav-nav {
-    display: flex;
-    gap: 4px;
-  }
-  .nav-btn {
-    padding: 8px 16px;
-    border-radius: var(--radius-md);
-    font-size: 14px;
-    font-weight: 500;
-    color: var(--sber-gray-text);
-    cursor: pointer;
-    border: none;
-    background: transparent;
-    transition: all 0.15s;
-    font-family: inherit;
-  }
-  .nav-btn:hover { background: var(--sber-gray); color: var(--sber-dark); }
-  .nav-btn.active { background: var(--sber-green-light); color: var(--sber-green); }
-  .nav-user {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-  }
-  .user-avatar {
-    width: 36px;
-    height: 36px;
-    border-radius: 50%;
-    background: linear-gradient(135deg, #21A038, #4CB86A);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: white;
-    font-size: 14px;
-    font-weight: 600;
-  }
-  .user-name { font-size: 14px; font-weight: 500; }
+/* top nav */
+.topnav {
+  height: var(--nav-h); background: #fff; border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; padding: 0 14px; gap: 10px; flex-shrink: 0; z-index: 30;
+}
+.burger { width: 36px; height: 36px; border: none; background: transparent; cursor: pointer; font-size: 20px; display: none; align-items: center; justify-content: center; border-radius: var(--r-sm); }
+.brand-icon { width: 34px; height: 34px; background: linear-gradient(135deg,#21A038,#17832E); border-radius: 10px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.brand-icon svg { width: 20px; height: 20px; }
+.brand-name { font-size: 16px; font-weight: 700; }
+.topnav-center { flex: 1; display: flex; justify-content: center; gap: 2px; }
+.nav-btn { padding: 7px 13px; border-radius: var(--r-md); font-size: 14px; font-weight: 500; color: var(--gray-t); border: none; background: transparent; cursor: pointer; font-family: inherit; transition: all .15s; }
+.nav-btn:hover { background: var(--gray); color: var(--dark); }
+.nav-btn.active { background: var(--green-l); color: var(--green); }
+.topnav-user { display: flex; align-items: center; gap: 8px; margin-left: auto; }
+.u-avatar { width: 34px; height: 34px; border-radius: 50%; background: linear-gradient(135deg,#21A038,#4CB86A); display: flex; align-items: center; justify-content: center; color: #fff; font-size: 12px; font-weight: 700; flex-shrink: 0; }
+.u-name { font-size: 13px; font-weight: 500; }
 
-  /* ─── MAIN LAYOUT ─── */
-  .main {
-    display: flex;
-    flex: 1;
-    overflow: hidden;
-    gap: 0;
-  }
+/* app body */
+.app-body { flex: 1; display: flex; overflow: hidden; position: relative; }
 
-  /* ─── LEFT SIDEBAR ─── */
-  .sidebar {
-    width: 280px;
-    background: var(--sber-white);
-    border-right: 1px solid var(--sber-border);
-    display: flex;
-    flex-direction: column;
-    flex-shrink: 0;
-    overflow: hidden;
-  }
-  .sidebar-header {
-    padding: 16px 20px 12px;
-    border-bottom: 1px solid var(--sber-border);
-  }
-  .sidebar-title {
-    font-size: 16px;
-    font-weight: 600;
-    color: var(--sber-dark);
-    margin-bottom: 10px;
-  }
-  .sidebar-mode-tabs {
-    display: flex;
-    gap: 6px;
-    background: var(--sber-gray);
-    border-radius: var(--radius-md);
-    padding: 3px;
-  }
-  .mode-tab {
-    flex: 1;
-    padding: 6px 8px;
-    border-radius: 9px;
-    font-size: 12px;
-    font-weight: 500;
-    text-align: center;
-    cursor: pointer;
-    border: none;
-    background: transparent;
-    color: var(--sber-gray-text);
-    transition: all 0.2s;
-    font-family: inherit;
-  }
-  .mode-tab.active {
-    background: var(--sber-white);
-    color: var(--sber-green);
-    box-shadow: 0 1px 4px rgba(0,0,0,0.1);
-  }
-  .sidebar-list {
-    flex: 1;
-    overflow-y: auto;
-    padding: 8px 0;
-  }
-  .case-item {
-    padding: 10px 20px;
-    cursor: pointer;
-    border-radius: 0;
-    transition: background 0.15s;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    position: relative;
-  }
-  .case-item:hover { background: var(--sber-gray); }
-  .case-item.active { background: var(--sber-green-light); }
-  .case-item.active::before {
-    content: '';
-    position: absolute;
-    left: 0;
-    top: 4px;
-    bottom: 4px;
-    width: 3px;
-    background: var(--sber-green);
-    border-radius: 0 3px 3px 0;
-  }
-  .case-icon {
-    width: 38px;
-    height: 38px;
-    border-radius: var(--radius-sm);
-    background: var(--sber-gray-2);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 18px;
-    flex-shrink: 0;
-  }
-  .case-item.active .case-icon { background: rgba(33,160,56,0.12); }
-  .case-info { flex: 1; min-width: 0; }
-  .case-name {
-    font-size: 14px;
-    font-weight: 500;
-    color: var(--sber-dark);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-  .case-meta { font-size: 11px; color: var(--sber-gray-text); margin-top: 2px; }
-  .case-badge {
-    font-size: 10px;
-    padding: 2px 7px;
-    border-radius: 20px;
-    font-weight: 600;
-    flex-shrink: 0;
-  }
-  .badge-training { background: #FFF3E0; color: #E65100; }
-  .badge-control { background: #E8EAF6; color: #3949AB; }
-  .sidebar-footer {
-    padding: 12px 16px;
-    border-top: 1px solid var(--sber-border);
-  }
-  .new-case-btn {
-    width: 100%;
-    padding: 10px;
-    border-radius: var(--radius-md);
-    background: var(--sber-green);
-    color: white;
-    border: none;
-    font-size: 14px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.15s;
-    font-family: inherit;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 6px;
-  }
-  .new-case-btn:hover { background: var(--sber-green-dark); }
+/* sidebar */
+.sidebar {
+  width: 272px; flex-shrink: 0; background: #fff; border-right: 1px solid var(--border);
+  display: flex; flex-direction: column; transition: transform .25s; z-index: 20;
+}
+.sidebar-overlay { position: absolute; inset: 0; background: rgba(0,0,0,.4); z-index: 19; display: none; }
+.sidebar-overlay.on { display: block; }
+.sb-head { padding: 12px 14px 10px; border-bottom: 1px solid var(--border); }
+.sb-title { font-size: 15px; font-weight: 600; margin-bottom: 8px; }
+.sb-tabs { display: flex; background: var(--gray); border-radius: var(--r-md); padding: 3px; gap: 3px; }
+.sb-tab { flex: 1; padding: 5px 4px; border-radius: 9px; font-size: 12px; font-weight: 500; text-align: center; border: none; background: transparent; color: var(--gray-t); cursor: pointer; font-family: inherit; transition: all .2s; }
+.sb-tab.active { background: #fff; color: var(--green); box-shadow: 0 1px 3px rgba(0,0,0,.1); }
+.sb-list { flex: 1; overflow-y: auto; padding: 6px 0; }
+.case-row { padding: 9px 14px; display: flex; align-items: center; gap: 9px; cursor: pointer; transition: background .15s; position: relative; }
+.case-row:hover { background: var(--gray); }
+.case-row.active { background: var(--green-l); }
+.case-row.active::before { content:''; position:absolute; left:0; top:4px; bottom:4px; width:3px; background:var(--green); border-radius:0 3px 3px 0; }
+.case-ico { width: 36px; height: 36px; border-radius: var(--r-sm); background: var(--gray-2); display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
+.case-row.active .case-ico { background: rgba(33,160,56,.12); }
+.case-inf { flex: 1; min-width: 0; }
+.case-name { font-size: 13px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.case-meta { font-size: 11px; color: var(--gray-t); margin-top: 1px; }
+.case-badge { font-size: 10px; padding: 2px 6px; border-radius: 20px; font-weight: 600; flex-shrink: 0; }
+.bt { background: #FFF3E0; color: #E65100; }
+.bc { background: #E8EAF6; color: #3949AB; }
+.sb-empty { padding: 28px 14px; text-align: center; font-size: 13px; color: var(--gray-t); line-height: 1.5; }
+.sb-foot { padding: 10px 12px; border-top: 1px solid var(--border); }
+.new-btn { width: 100%; padding: 10px; border-radius: var(--r-md); background: var(--green); color: #fff; border: none; font-size: 14px; font-weight: 600; cursor: pointer; font-family: inherit; transition: background .15s; display: flex; align-items: center; justify-content: center; gap: 6px; }
+.new-btn:hover { background: var(--green-d); }
 
-  /* ─── CHAT AREA ─── */
-  .chat-area {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-    background: #F0F2F5;
-    min-width: 0;
-  }
+/* pages */
+.page { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+.page.hidden { display: none !important; }
 
-  /* ─── CHAT HEADER ─── */
-  .chat-header {
-    background: var(--sber-white);
-    border-bottom: 1px solid var(--sber-border);
-    padding: 0 24px;
-    height: 64px;
-    display: flex;
-    align-items: center;
-    gap: 14px;
-    flex-shrink: 0;
-  }
-  .patient-avatar {
-    width: 42px;
-    height: 42px;
-    border-radius: 50%;
-    background: linear-gradient(135deg, #5C9BD6, #3776B8);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 17px;
-    flex-shrink: 0;
-  }
-  .patient-info { flex: 1; }
-  .patient-name { font-size: 15px; font-weight: 600; }
-  .patient-status {
-    font-size: 12px;
-    color: var(--sber-gray-text);
-    display: flex;
-    align-items: center;
-    gap: 4px;
-  }
-  .status-dot {
-    width: 7px;
-    height: 7px;
-    border-radius: 50%;
-    background: var(--sber-green);
-  }
-  .chat-header-actions {
-    display: flex;
-    gap: 6px;
-  }
-  .header-action-btn {
-    width: 36px;
-    height: 36px;
-    border-radius: var(--radius-sm);
-    border: 1px solid var(--sber-gray-2);
-    background: transparent;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 16px;
-    color: var(--sber-gray-text);
-    transition: all 0.15s;
-    font-family: inherit;
-  }
-  .header-action-btn:hover { background: var(--sber-gray); color: var(--sber-dark); }
-  .header-action-btn.danger:hover { background: #FFEBEE; color: #C62828; border-color: #FFCDD2; }
+/* ── CHAT PAGE ── */
+#p-chat { flex-direction: row; }
+.chat-main { flex: 1; display: flex; flex-direction: column; overflow: hidden; background: #F0F2F5; min-width: 0; }
 
-  /* ─── PATIENT CARD (right panel) ─── */
-  .patient-panel {
-    width: 300px;
-    background: var(--sber-white);
-    border-left: 1px solid var(--sber-border);
-    display: flex;
-    flex-direction: column;
-    overflow-y: auto;
-    flex-shrink: 0;
-  }
-  .panel-section {
-    padding: 16px 18px;
-    border-bottom: 1px solid var(--sber-border);
-  }
-  .panel-section:last-child { border-bottom: none; }
-  .panel-section-title {
-    font-size: 11px;
-    font-weight: 600;
-    color: var(--sber-gray-text);
-    letter-spacing: 0.5px;
-    text-transform: uppercase;
-    margin-bottom: 10px;
-  }
-  .patient-card-header {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    margin-bottom: 12px;
-  }
-  .panel-avatar {
-    width: 52px;
-    height: 52px;
-    border-radius: 50%;
-    background: linear-gradient(135deg, #5C9BD6, #3776B8);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 22px;
-    flex-shrink: 0;
-  }
-  .panel-patient-name { font-size: 15px; font-weight: 600; }
-  .panel-patient-meta { font-size: 12px; color: var(--sber-gray-text); margin-top: 2px; }
-  .disease-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    padding: 5px 10px;
-    border-radius: 20px;
-    font-size: 12px;
-    font-weight: 600;
-    background: var(--sber-green-light);
-    color: var(--sber-green-dark);
-    margin-bottom: 4px;
-  }
-  .info-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 5px 0;
-    font-size: 13px;
-  }
-  .info-label { color: var(--sber-gray-text); }
-  .info-value { font-weight: 500; text-align: right; max-width: 170px; }
-  .progress-section {}
-  .progress-label {
-    display: flex;
-    justify-content: space-between;
-    font-size: 12px;
-    color: var(--sber-gray-text);
-    margin-bottom: 5px;
-  }
-  .progress-bar {
-    height: 6px;
-    background: var(--sber-gray-2);
-    border-radius: 10px;
-    overflow: hidden;
-    margin-bottom: 10px;
-  }
-  .progress-fill {
-    height: 100%;
-    background: linear-gradient(90deg, #21A038, #4CB86A);
-    border-radius: 10px;
-    transition: width 0.4s ease;
-  }
-  .quick-actions-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 7px;
-  }
-  .quick-btn {
-    padding: 8px 10px;
-    border-radius: var(--radius-sm);
-    border: 1px solid var(--sber-gray-2);
-    background: var(--sber-gray);
-    font-size: 12px;
-    font-weight: 500;
-    cursor: pointer;
-    color: var(--sber-dark);
-    text-align: center;
-    transition: all 0.15s;
-    font-family: inherit;
-    line-height: 1.3;
-  }
-  .quick-btn:hover { background: var(--sber-green-light); color: var(--sber-green); border-color: var(--sber-green-mid); }
-  .quick-btn-full {
-    grid-column: span 2;
-    background: var(--sber-green);
-    color: white;
-    border-color: var(--sber-green);
-  }
-  .quick-btn-full:hover { background: var(--sber-green-dark); color: white; border-color: var(--sber-green-dark); }
-  .quick-btn-danger {
-    grid-column: span 2;
-    background: transparent;
-    color: #C62828;
-    border-color: #FFCDD2;
-  }
-  .quick-btn-danger:hover { background: #FFEBEE; }
+.chat-empty { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 32px; text-align: center; }
+.ce-icon { font-size: 64px; margin-bottom: 14px; }
+.ce-title { font-size: 20px; font-weight: 700; margin-bottom: 8px; }
+.ce-sub { font-size: 14px; color: var(--gray-t); margin-bottom: 22px; max-width: 280px; line-height: 1.5; }
+.ce-btn { padding: 12px 28px; border-radius: var(--r-xl); background: var(--green); color: #fff; border: none; font-size: 15px; font-weight: 600; cursor: pointer; font-family: inherit; }
 
-  /* ─── MESSAGES ─── */
-  .messages-container {
-    flex: 1;
-    overflow-y: auto;
-    padding: 20px 24px;
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-  }
-  .messages-container::-webkit-scrollbar { width: 5px; }
-  .messages-container::-webkit-scrollbar-track { background: transparent; }
-  .messages-container::-webkit-scrollbar-thumb { background: var(--sber-gray-3); border-radius: 10px; }
+.chat-active { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+.err-banner { background: #FFEBEE; border-bottom: 1px solid #FFCDD2; padding: 7px 14px; font-size: 13px; color: #C62828; display: flex; align-items: center; gap: 7px; flex-shrink: 0; }
+.chat-hdr { height: 58px; background: #fff; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 11px; padding: 0 14px; flex-shrink: 0; }
+.p-avatar { width: 38px; height: 38px; border-radius: 50%; background: linear-gradient(135deg,#5C9BD6,#3776B8); display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
+.p-info { flex: 1; min-width: 0; }
+.p-name { font-size: 15px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.p-status { font-size: 11px; color: var(--gray-t); display: flex; align-items: center; gap: 4px; }
+.dot { width: 6px; height: 6px; border-radius: 50%; background: var(--green); flex-shrink: 0; }
+.hdr-btns { display: flex; gap: 4px; }
+.hbtn { width: 34px; height: 34px; border-radius: var(--r-sm); border: 1px solid var(--gray-2); background: transparent; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 15px; color: var(--gray-t); transition: all .15s; font-family: inherit; }
+.hbtn:hover { background: var(--gray); color: var(--dark); }
+.hbtn.red:hover { background: #FFEBEE; color: #C62828; border-color: #FFCDD2; }
 
-  .msg-row {
-    display: flex;
-    gap: 8px;
-    max-width: 72%;
-    animation: msgIn 0.2s ease-out;
-  }
-  @keyframes msgIn {
-    from { opacity: 0; transform: translateY(8px); }
-    to { opacity: 1; transform: translateY(0); }
-  }
-  .msg-row.user {
-    align-self: flex-end;
-    flex-direction: row-reverse;
-  }
-  .msg-row.agent { align-self: flex-start; }
-  .msg-row.system {
-    align-self: center;
-    max-width: 80%;
-  }
+.msgs { flex: 1; overflow-y: auto; padding: 14px; display: flex; flex-direction: column; gap: 10px; scroll-behavior: smooth; }
+.msgs::-webkit-scrollbar { width: 4px; }
+.msgs::-webkit-scrollbar-thumb { background: var(--gray-3); border-radius: 10px; }
 
-  .msg-avatar {
-    width: 34px;
-    height: 34px;
-    border-radius: 50%;
-    flex-shrink: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 15px;
-    margin-top: auto;
-  }
-  .msg-avatar.agent-av {
-    background: linear-gradient(135deg, #5C9BD6, #3776B8);
-  }
-  .msg-avatar.user-av {
-    background: linear-gradient(135deg, #21A038, #4CB86A);
-    color: white;
-    font-size: 12px;
-    font-weight: 600;
-  }
+.mrow { display: flex; gap: 7px; max-width: 76%; animation: mIn .2s ease-out; }
+@keyframes mIn { from { opacity:0; transform:translateY(6px); } to { opacity:1; transform:translateY(0); } }
+.mrow.user { align-self: flex-end; flex-direction: row-reverse; }
+.mrow.bot { align-self: flex-start; }
+.mrow.sys { align-self: center; max-width: 86%; }
+.mav { width: 30px; height: 30px; border-radius: 50%; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 14px; margin-top: auto; }
+.mav.b { background: linear-gradient(135deg,#5C9BD6,#3776B8); }
+.mav.u { background: linear-gradient(135deg,#21A038,#4CB86A); color:#fff; font-size:10px; font-weight:700; }
+.bbl { padding: 9px 13px; border-radius: 18px; font-size: 14px; line-height: 1.55; max-width: 100%; }
+.bot .bbl { background: #fff; border-radius: 4px 18px 18px 18px; box-shadow: var(--shadow-sm); }
+.user .bbl { background: var(--green); color: #fff; border-radius: 18px 4px 18px 18px; }
+.sys .bbl { background: rgba(0,0,0,.05); color: var(--gray-t); border-radius: var(--r-md); font-size: 12px; text-align: center; padding: 5px 12px; }
+.mtime { font-size: 10px; color: var(--gray-t); margin-top: 3px; padding: 0 3px; }
+.user .mtime { text-align: right; }
+.tick { color: var(--green-m); }
 
-  .bubble {
-    padding: 10px 14px;
-    border-radius: 18px;
-    font-size: 14px;
-    line-height: 1.55;
-    position: relative;
-    max-width: 100%;
-  }
-  .agent .bubble {
-    background: var(--sber-white);
-    color: var(--sber-dark);
-    border-radius: 4px 18px 18px 18px;
-    box-shadow: var(--sber-shadow-sm);
-  }
-  .user .bubble {
-    background: var(--sber-green);
-    color: white;
-    border-radius: 18px 4px 18px 18px;
-  }
-  .system .bubble {
-    background: rgba(0,0,0,0.05);
-    color: var(--sber-gray-text);
-    border-radius: var(--radius-md);
-    font-size: 12px;
-    text-align: center;
-    padding: 6px 14px;
-    box-shadow: none;
-  }
+.typing-row { display: none; align-self: flex-start; gap: 7px; }
+.typing-row.on { display: flex; }
+.typing-bbl { background: #fff; border-radius: 4px 18px 18px 18px; padding: 11px 13px; box-shadow: var(--shadow-sm); display: flex; gap: 4px; align-items: center; }
+.tdot { width: 7px; height: 7px; border-radius: 50%; background: var(--gray-3); animation: tp 1.2s infinite; }
+.tdot:nth-child(2){animation-delay:.2s} .tdot:nth-child(3){animation-delay:.4s}
+@keyframes tp { 0%,60%,100%{opacity:.3;transform:scale(.85)} 30%{opacity:1;transform:scale(1)} }
 
-  .msg-meta {
-    font-size: 10px;
-    color: var(--sber-gray-text);
-    margin-top: 3px;
-    padding: 0 4px;
-    display: flex;
-    align-items: center;
-    gap: 4px;
-  }
-  .user .msg-meta { justify-content: flex-end; }
-  .read-check { color: #4CB86A; font-size: 12px; }
+.input-area { background: #fff; border-top: 1px solid var(--border); padding: 9px 12px 11px; flex-shrink: 0; }
+.qbtns { display: flex; gap: 5px; margin-bottom: 8px; flex-wrap: wrap; }
+.qbtn { padding: 6px 11px; border-radius: 20px; font-size: 13px; font-weight: 500; border: 1.5px solid var(--green); color: var(--green); background: transparent; cursor: pointer; font-family: inherit; white-space: nowrap; transition: all .15s; }
+.qbtn:hover { background: var(--green-l); }
+.qbtn.fin { background: var(--green-l); }
+.qbtn.red { border-color: #EF5350; color: #C62828; }
+.qbtn.red:hover { background: #FFEBEE; }
+.irow { display: flex; gap: 8px; align-items: flex-end; }
+.iwrap { flex: 1; background: var(--gray); border-radius: var(--r-xl); border: 1.5px solid transparent; display: flex; align-items: flex-end; padding: 4px 4px 4px 13px; transition: border-color .15s; }
+.iwrap:focus-within { border-color: var(--green); background: #fff; }
+#msgInput { flex: 1; border: none; background: transparent; outline: none; font-size: 15px; line-height: 1.5; color: var(--dark); font-family: inherit; resize: none; max-height: 96px; min-height: 34px; padding: 5px 0; }
+#msgInput::placeholder { color: var(--gray-3); }
+.sbtn { width: 38px; height: 38px; border-radius: 50%; background: var(--green); border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all .15s; flex-shrink: 0; }
+.sbtn:hover { background: var(--green-d); }
+.sbtn:active { transform: scale(.95); }
+.sbtn svg { width: 17px; height: 17px; fill: #fff; }
+.sbtn:disabled { opacity: .5; cursor: default; }
 
-  /* ─── TYPING INDICATOR ─── */
-  .typing-indicator {
-    display: none;
-    align-self: flex-start;
-    gap: 8px;
-  }
-  .typing-indicator.visible { display: flex; }
-  .typing-bubble {
-    background: var(--sber-white);
-    border-radius: 4px 18px 18px 18px;
-    padding: 12px 16px;
-    box-shadow: var(--sber-shadow-sm);
-    display: flex;
-    gap: 4px;
-    align-items: center;
-  }
-  .typing-dot {
-    width: 7px;
-    height: 7px;
-    border-radius: 50%;
-    background: var(--sber-gray-3);
-    animation: typePulse 1.2s infinite;
-  }
-  .typing-dot:nth-child(2) { animation-delay: 0.2s; }
-  .typing-dot:nth-child(3) { animation-delay: 0.4s; }
-  @keyframes typePulse {
-    0%, 60%, 100% { opacity: 0.3; transform: scale(0.85); }
-    30% { opacity: 1; transform: scale(1); }
-  }
+/* patient panel */
+.pat-panel { width: 272px; flex-shrink: 0; background: #fff; border-left: 1px solid var(--border); display: flex; flex-direction: column; overflow-y: auto; transition: transform .25s; }
+.pp-sec { padding: 13px 14px; border-bottom: 1px solid var(--border); }
+.pp-sec:last-child { border-bottom: none; }
+.pp-label { font-size: 10px; font-weight: 600; color: var(--gray-t); text-transform: uppercase; letter-spacing: .6px; margin-bottom: 9px; }
+.pp-avatar { width: 46px; height: 46px; border-radius: 50%; background: linear-gradient(135deg,#5C9BD6,#3776B8); display: flex; align-items: center; justify-content: center; font-size: 22px; flex-shrink: 0; }
+.pp-pill { display: inline-flex; align-items: center; gap: 5px; padding: 3px 10px; border-radius: 20px; font-size: 12px; font-weight: 600; background: var(--green-l); color: var(--green-d); margin-top: 8px; }
+.pp-row { display: flex; justify-content: space-between; align-items: center; padding: 4px 0; font-size: 13px; }
+.pp-key { color: var(--gray-t); }
+.pp-val { font-weight: 500; text-align: right; }
+.prg-lbl { display: flex; justify-content: space-between; font-size: 12px; color: var(--gray-t); margin-bottom: 4px; }
+.prg-bar { height: 5px; background: var(--gray-2); border-radius: 10px; overflow: hidden; margin-bottom: 8px; }
+.prg-fill { height: 100%; background: linear-gradient(90deg,#21A038,#4CB86A); border-radius: 10px; transition: width .4s ease; }
+.qa-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.qa-btn { padding: 8px 6px; border-radius: var(--r-sm); border: 1px solid var(--gray-2); background: var(--gray); font-size: 12px; font-weight: 500; cursor: pointer; color: var(--dark); text-align: center; transition: all .15s; font-family: inherit; line-height: 1.3; }
+.qa-btn:hover { background: var(--green-l); color: var(--green); border-color: var(--green-m); }
+.qa-btn.s2 { grid-column: span 2; background: var(--green); color: #fff; border-color: var(--green); }
+.qa-btn.s2:hover { background: var(--green-d); }
+.qa-btn.s2r { grid-column: span 2; background: transparent; color: #C62828; border-color: #FFCDD2; }
+.qa-btn.s2r:hover { background: #FFEBEE; }
 
-  /* ─── INPUT AREA ─── */
-  .input-area {
-    background: var(--sber-white);
-    border-top: 1px solid var(--sber-border);
-    padding: 12px 20px 14px;
-    flex-shrink: 0;
-  }
-  .reply-buttons {
-    display: flex;
-    gap: 7px;
-    margin-bottom: 10px;
-    flex-wrap: wrap;
-  }
-  .reply-btn {
-    padding: 6px 14px;
-    border-radius: 20px;
-    font-size: 13px;
-    font-weight: 500;
-    border: 1.5px solid var(--sber-green);
-    color: var(--sber-green);
-    background: transparent;
-    cursor: pointer;
-    transition: all 0.15s;
-    font-family: inherit;
-    white-space: nowrap;
-  }
-  .reply-btn:hover { background: var(--sber-green-light); }
-  .reply-btn.danger { border-color: #EF5350; color: #C62828; }
-  .reply-btn.danger:hover { background: #FFEBEE; }
+/* ── STATS PAGE ── */
+#p-stats { overflow-y: auto; padding: 22px 20px; gap: 16px; }
+.pg-title { font-size: 22px; font-weight: 700; }
+.pg-sub { font-size: 14px; color: var(--gray-t); }
+.sg { display: grid; grid-template-columns: repeat(auto-fit,minmax(150px,1fr)); gap: 10px; }
+.sc { background: #fff; border-radius: var(--r-md); padding: 14px 16px; box-shadow: var(--shadow-sm); border: 1px solid var(--border); }
+.sc-num { font-size: 28px; font-weight: 700; color: var(--green); }
+.sc-lbl { font-size: 13px; color: var(--gray-t); margin-top: 2px; }
+.hl { display: flex; flex-direction: column; gap: 10px; }
+.hi { background: #fff; border-radius: var(--r-md); padding: 12px 14px; box-shadow: var(--shadow-sm); border: 1px solid var(--border); display: flex; align-items: center; gap: 11px; }
+.hi-icon { width: 40px; height: 40px; border-radius: var(--r-sm); background: var(--green-l); display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0; }
+.hi-inf { flex: 1; }
+.hi-name { font-size: 14px; font-weight: 600; }
+.hi-meta { font-size: 12px; color: var(--gray-t); margin-top: 1px; }
+.hi-sc { font-size: 18px; font-weight: 700; }
+.sg-good{color:var(--green)} .sg-mid{color:#F59E0B} .sg-low{color:#EF5350}
+.no-hist { text-align: center; padding: 40px 14px; color: var(--gray-t); }
+.no-hist-icon { font-size: 44px; margin-bottom: 10px; }
 
-  .input-row {
-    display: flex;
-    gap: 10px;
-    align-items: flex-end;
-  }
-  .input-attach-btn {
-    width: 42px;
-    height: 42px;
-    border-radius: 50%;
-    border: 1.5px solid var(--sber-gray-2);
-    background: transparent;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 18px;
-    color: var(--sber-gray-text);
-    transition: all 0.15s;
-    flex-shrink: 0;
-    font-family: inherit;
-  }
-  .input-attach-btn:hover { border-color: var(--sber-green); color: var(--sber-green); }
+/* ── KB PAGE ── */
+#p-kb { overflow-y: auto; padding: 22px 20px; gap: 16px; }
+.kb-grid { display: grid; grid-template-columns: repeat(auto-fill,minmax(280px,1fr)); gap: 12px; }
+.kb-card { background: #fff; border-radius: var(--r-md); padding: 16px; box-shadow: var(--shadow-sm); border: 1px solid var(--border); cursor: pointer; transition: all .2s; }
+.kb-card:hover { border-color: var(--green); box-shadow: 0 4px 20px rgba(33,160,56,.12); transform: translateY(-1px); }
+.kb-hdr { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+.kb-icon { width: 46px; height: 46px; border-radius: var(--r-md); background: var(--green-l); display: flex; align-items: center; justify-content: center; font-size: 24px; flex-shrink: 0; }
+.kb-n { font-size: 15px; font-weight: 700; }
+.kb-c { font-size: 12px; color: var(--gray-t); margin-top: 1px; }
+.kb-tags { display: flex; flex-wrap: wrap; gap: 5px; }
+.kb-tag { padding: 3px 8px; border-radius: 20px; font-size: 11px; font-weight: 600; background: var(--gray); color: var(--gray-t); }
+.kb-body { display: none; margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border); font-size: 13px; line-height: 1.6; color: #444; }
+.kb-card.open .kb-body { display: block; }
+.kb-arrow { margin-left: auto; color: var(--gray-t); font-size: 12px; transition: transform .2s; }
+.kb-card.open .kb-arrow { transform: rotate(180deg); }
 
-  .input-wrap {
-    flex: 1;
-    background: var(--sber-gray);
-    border-radius: var(--radius-xl);
-    border: 1.5px solid transparent;
-    display: flex;
-    align-items: flex-end;
-    padding: 4px 4px 4px 16px;
-    transition: border-color 0.15s;
-  }
-  .input-wrap:focus-within { border-color: var(--sber-green); background: white; }
-  #msgInput {
-    flex: 1;
-    border: none;
-    background: transparent;
-    outline: none;
-    font-size: 14px;
-    line-height: 1.5;
-    color: var(--sber-dark);
-    font-family: inherit;
-    resize: none;
-    max-height: 120px;
-    min-height: 36px;
-    padding: 8px 0;
-  }
-  #msgInput::placeholder { color: var(--sber-gray-3); }
-  .send-btn {
-    width: 38px;
-    height: 38px;
-    border-radius: 50%;
-    background: var(--sber-green);
-    border: none;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: all 0.15s;
-    flex-shrink: 0;
-  }
-  .send-btn:hover { background: var(--sber-green-dark); transform: scale(1.05); }
-  .send-btn:active { transform: scale(0.95); }
-  .send-btn svg { width: 18px; height: 18px; fill: white; }
+/* ── MODAL ── */
+.overlay { position: fixed; inset: 0; background: rgba(0,0,0,.5); z-index: 100; display: none; align-items: flex-end; justify-content: center; }
+.overlay.on { display: flex; }
+.modal { background: #fff; border-radius: var(--r-lg) var(--r-lg) 0 0; padding: 20px; width: 100%; max-width: 520px; max-height: 92dvh; overflow-y: auto; animation: sUp .25s ease-out; }
+@keyframes sUp { from{transform:translateY(100%)} to{transform:translateY(0)} }
+.mhandle { width: 34px; height: 4px; background: var(--gray-2); border-radius: 2px; margin: 0 auto 16px; }
+.m-title { font-size: 20px; font-weight: 700; margin-bottom: 3px; }
+.m-sub { font-size: 14px; color: var(--gray-t); margin-bottom: 16px; }
+.m-lbl { font-size: 11px; font-weight: 600; color: var(--gray-t); text-transform: uppercase; letter-spacing: .5px; margin-bottom: 8px; }
+.d-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 16px; }
+.d-card { padding: 12px 8px; border-radius: var(--r-md); border: 2px solid var(--gray-2); cursor: pointer; text-align: center; transition: all .15s; }
+.d-card:hover, .d-card.sel { border-color: var(--green); background: var(--green-l); }
+.d-icon { font-size: 26px; margin-bottom: 4px; }
+.d-name { font-size: 13px; font-weight: 600; }
+.d-desc { font-size: 11px; color: var(--gray-t); margin-top: 2px; }
+.mode-row { display: flex; gap: 8px; margin-bottom: 18px; }
+.m-card { flex: 1; padding: 12px; border-radius: var(--r-md); border: 2px solid var(--gray-2); cursor: pointer; transition: all .15s; }
+.m-card:hover { border-color: var(--green-m); }
+.m-card.sel { border-color: var(--green); background: var(--green-l); }
+.mc-n { font-size: 13px; font-weight: 600; margin-bottom: 2px; }
+.mc-d { font-size: 11px; color: var(--gray-t); }
+.m-btns { display: flex; gap: 10px; justify-content: flex-end; }
+.btn-c { padding: 10px 18px; border-radius: var(--r-md); border: 1.5px solid var(--gray-2); background: transparent; font-size: 14px; font-weight: 500; cursor: pointer; font-family: inherit; }
+.btn-s { padding: 10px 22px; border-radius: var(--r-md); border: none; background: var(--green); color: #fff; font-size: 14px; font-weight: 600; cursor: pointer; font-family: inherit; transition: background .15s; }
+.btn-s:hover { background: var(--green-d); }
 
-  /* ─── MODAL ─── */
-  .modal-overlay {
-    position: fixed;
-    inset: 0;
-    background: rgba(0,0,0,0.45);
-    z-index: 100;
-    display: none;
-    align-items: center;
-    justify-content: center;
-  }
-  .modal-overlay.open { display: flex; }
-  .modal {
-    background: white;
-    border-radius: var(--radius-lg);
-    padding: 28px;
-    width: 480px;
-    max-width: 92vw;
-    box-shadow: 0 20px 60px rgba(0,0,0,0.2);
-    animation: modalIn 0.2s ease-out;
-  }
-  @keyframes modalIn {
-    from { opacity: 0; transform: scale(0.95) translateY(10px); }
-    to { opacity: 1; transform: scale(1) translateY(0); }
-  }
-  .modal-title { font-size: 20px; font-weight: 700; margin-bottom: 6px; }
-  .modal-sub { font-size: 14px; color: var(--sber-gray-text); margin-bottom: 20px; }
-  .modal-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; }
-  .modal-card {
-    padding: 14px;
-    border-radius: var(--radius-md);
-    border: 2px solid var(--sber-gray-2);
-    cursor: pointer;
-    transition: all 0.15s;
-    text-align: center;
-  }
-  .modal-card:hover { border-color: var(--sber-green); background: var(--sber-green-light); }
-  .modal-card.selected { border-color: var(--sber-green); background: var(--sber-green-light); }
-  .modal-card-icon { font-size: 28px; margin-bottom: 6px; }
-  .modal-card-name { font-size: 13px; font-weight: 600; }
-  .modal-card-desc { font-size: 11px; color: var(--sber-gray-text); margin-top: 2px; }
-  .modal-section-label { font-size: 12px; font-weight: 600; color: var(--sber-gray-text); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 10px; }
-  .modal-mode-row { display: flex; gap: 8px; margin-bottom: 20px; }
-  .mode-card {
-    flex: 1;
-    padding: 12px;
-    border-radius: var(--radius-md);
-    border: 2px solid var(--sber-gray-2);
-    cursor: pointer;
-    transition: all 0.15s;
-  }
-  .mode-card:hover { border-color: var(--sber-green-mid); }
-  .mode-card.selected { border-color: var(--sber-green); background: var(--sber-green-light); }
-  .mode-card-name { font-size: 13px; font-weight: 600; margin-bottom: 2px; }
-  .mode-card-desc { font-size: 11px; color: var(--sber-gray-text); }
-  .modal-btn-row { display: flex; gap: 10px; justify-content: flex-end; }
-  .modal-cancel {
-    padding: 10px 20px;
-    border-radius: var(--radius-md);
-    border: 1.5px solid var(--sber-gray-2);
-    background: transparent;
-    font-size: 14px;
-    font-weight: 500;
-    cursor: pointer;
-    font-family: inherit;
-    color: var(--sber-dark);
-  }
-  .modal-start {
-    padding: 10px 24px;
-    border-radius: var(--radius-md);
-    border: none;
-    background: var(--sber-green);
-    color: white;
-    font-size: 14px;
-    font-weight: 600;
-    cursor: pointer;
-    font-family: inherit;
-    transition: all 0.15s;
-  }
-  .modal-start:hover { background: var(--sber-green-dark); }
+/* report */
+.rep-card { background: #fff; border-radius: var(--r-lg); overflow: hidden; box-shadow: var(--shadow); max-width: 100%; }
+.rep-tabs { display: flex; border-bottom: 1px solid var(--border); background: var(--gray); }
+.rep-tab { flex: 1; padding: 9px 5px; font-size: 12px; font-weight: 500; text-align: center; cursor: pointer; border: none; background: transparent; color: var(--gray-t); border-bottom: 2px solid transparent; font-family: inherit; }
+.rep-tab.active { color: var(--green); border-bottom-color: var(--green); background: #fff; }
+.rep-body { padding: 14px; }
+.sc-circle { width: 68px; height: 68px; border-radius: 50%; display: flex; flex-direction: column; align-items: center; justify-content: center; margin: 0 auto 12px; }
+.sc-n { font-size: 19px; font-weight: 700; line-height: 1; }
+.sc-l { font-size: 10px; color: var(--gray-t); }
+.arow { display: flex; justify-content: space-between; align-items: center; padding: 5px 0; font-size: 13px; border-bottom: 1px solid var(--gray-2); }
+.arow:last-child { border-bottom: none; }
+.ok { color: var(--green); font-weight: 700; } .no { color: #EF5350; font-weight: 700; }
 
-  /* ─── REPORT CARD ─── */
-  .report-card {
-    background: white;
-    border-radius: var(--radius-lg);
-    overflow: hidden;
-    box-shadow: var(--sber-shadow);
-    margin: 4px 0;
-  }
-  .report-tabs {
-    display: flex;
-    border-bottom: 1px solid var(--sber-border);
-    background: var(--sber-gray);
-  }
-  .report-tab {
-    flex: 1;
-    padding: 10px 8px;
-    font-size: 12px;
-    font-weight: 500;
-    text-align: center;
-    cursor: pointer;
-    border: none;
-    background: transparent;
-    color: var(--sber-gray-text);
-    transition: all 0.15s;
-    font-family: inherit;
-    border-bottom: 2px solid transparent;
-  }
-  .report-tab.active { color: var(--sber-green); border-bottom-color: var(--sber-green); background: white; }
-  .report-body { padding: 16px; }
-  .score-circle {
-    width: 80px;
-    height: 80px;
-    border-radius: 50%;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    margin: 0 auto 14px;
-    position: relative;
-  }
-  .score-num { font-size: 22px; font-weight: 700; line-height: 1; }
-  .score-label { font-size: 10px; color: var(--sber-gray-text); }
-  .attr-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 5px 0;
-    font-size: 13px;
-    border-bottom: 1px solid var(--sber-gray-2);
-  }
-  .attr-row:last-child { border-bottom: none; }
-  .attr-check { color: var(--sber-green); font-weight: 700; }
-  .attr-cross { color: #EF5350; font-weight: 700; }
+/* bottom nav */
+.bot-nav { display: none; background: #fff; border-top: 1px solid var(--border); height: var(--bot-h); flex-shrink: 0; }
+.bot-inner { display: flex; height: 100%; }
+.bnav { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; border: none; background: transparent; cursor: pointer; color: var(--gray-t); font-size: 10px; font-weight: 500; font-family: inherit; transition: color .15s; }
+.bnav.active { color: var(--green); }
+.bnav-icon { font-size: 21px; line-height: 1; }
 
-  .date-divider {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    color: var(--sber-gray-text);
-    font-size: 11px;
-    font-weight: 500;
-    padding: 4px 0;
-  }
-  .date-divider::before, .date-divider::after {
-    content: '';
-    flex: 1;
-    height: 1px;
-    background: var(--sber-gray-2);
-  }
+/* spinner */
+.spin { display: inline-block; width: 15px; height: 15px; border: 2px solid rgba(255,255,255,.3); border-top-color: #fff; border-radius: 50%; animation: sp .7s linear infinite; }
+@keyframes sp { to{transform:rotate(360deg)} }
 
-  .tag-pill {
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-    padding: 3px 9px;
-    border-radius: 20px;
-    font-size: 11px;
-    font-weight: 600;
-  }
-  .tag-info { background: #E3F2FD; color: #1565C0; }
-  .tag-warn { background: #FFF8E1; color: #E65100; }
-  .tag-success { background: var(--sber-green-light); color: var(--sber-green-dark); }
+/* ── MOBILE ── */
+@media (max-width: 768px) {
+  .burger { display: flex; }
+  .topnav-center { display: none; }
+  .u-name { display: none; }
+  .sidebar { position: absolute; top: 0; left: 0; bottom: 0; transform: translateX(-100%); box-shadow: var(--shadow); }
+  .sidebar.on { transform: translateX(0); }
+  .pat-panel { position: absolute; top: 0; right: 0; bottom: 0; width: min(320px, 92%); transform: translateX(100%); box-shadow: var(--shadow); z-index: 18; }
+  .pat-panel.on { transform: translateX(0); }
+  .bot-nav { display: block; }
+  .mrow { max-width: 88%; }
+  #p-stats { padding: 16px; }
+  #p-kb { padding: 16px; }
+  .sg { grid-template-columns: 1fr 1fr; }
+  .kb-grid { grid-template-columns: 1fr; }
+  .mode-row { flex-direction: column; }
+  .wl-title { font-size: 28px; }
+  .wl-grid { grid-template-columns: 1fr 1fr; }
+}
+@media (max-width: 400px) {
+  .wl-grid { grid-template-columns: 1fr; }
+  .sg { grid-template-columns: 1fr; }
+  .d-grid { grid-template-columns: 1fr 1fr; }
+}
 </style>
 </head>
 <body>
 
-<!-- ─── TOP NAV ─── -->
-<nav class="topnav">
-  <div class="topnav-logo">
-    <div class="sber-logo-icon">
-      <svg viewBox="0 0 22 22" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path d="M11 2C6.03 2 2 6.03 2 11C2 15.97 6.03 20 11 20C15.97 20 20 15.97 20 11" stroke="white" stroke-width="2.2" stroke-linecap="round"/>
-        <path d="M11 6L14 9L11 12" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-        <path d="M14 9H7" stroke="white" stroke-width="2" stroke-linecap="round"/>
-      </svg>
-    </div>
-    <div>
-      <div class="topnav-title">СберМедИИ</div>
-      <div class="topnav-subtitle">Тренажёр для врачей</div>
-    </div>
+<!-- ══════════ WELCOME ══════════ -->
+<div id="welcome" class="screen" style="display:flex">
+  <div class="wl-logo">
+    <svg viewBox="0 0 48 48" fill="none">
+      <path d="M24 6C13.5 6 5 14.5 5 25s8.5 19 19 19 19-8.5 19-19" stroke="white" stroke-width="4" stroke-linecap="round"/>
+      <path d="M24 16l7 7-7 7" stroke="white" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M31 23H17" stroke="white" stroke-width="3.5" stroke-linecap="round"/>
+    </svg>
   </div>
-  <div class="topnav-nav">
-    <button class="nav-btn active">💬 Тренажёр</button>
-    <button class="nav-btn">📊 Статистика</button>
-    <button class="nav-btn">📚 База знаний</button>
+  <h1 class="wl-title">СберМедИИ</h1>
+  <p class="wl-sub">Тренажёр для врачей с ИИ-пациентами. Практикуйте диагностику и получайте детальные оценки.</p>
+  <div class="wl-grid">
+    <div class="wl-card"><div class="wl-card-icon">🤖</div><div class="wl-card-title">ИИ-пациент</div><div class="wl-card-desc">Реалистичные диалоги на GigaChat</div></div>
+    <div class="wl-card"><div class="wl-card-icon">📊</div><div class="wl-card-title">Оценка</div><div class="wl-card-desc">Детальный анализ каждой консультации</div></div>
+    <div class="wl-card"><div class="wl-card-icon">🩺</div><div class="wl-card-title">5 болезней</div><div class="wl-card-desc">Диабет, анемия, туберкулёз и другие</div></div>
+    <div class="wl-card"><div class="wl-card-icon">🎯</div><div class="wl-card-title">Два режима</div><div class="wl-card-desc">Тренировка с подсказками и контроль</div></div>
   </div>
-  <div class="nav-user">
-    <div class="user-avatar">ИВ</div>
-    <div>
-      <div class="user-name">Иванов И.И.</div>
-      <div style="font-size:11px; color: var(--sber-gray-text);">Врач-терапевт</div>
-    </div>
-  </div>
-</nav>
-
-<!-- ─── MAIN ─── -->
-<div class="main">
-
-  <!-- LEFT SIDEBAR -->
-  <aside class="sidebar">
-    <div class="sidebar-header">
-      <div class="sidebar-title">Мои кейсы</div>
-      <div class="sidebar-mode-tabs">
-        <button class="mode-tab active" onclick="filterCases('all', this)">Все</button>
-        <button class="mode-tab" onclick="filterCases('training', this)">Тренировка</button>
-        <button class="mode-tab" onclick="filterCases('control', this)">Контроль</button>
-      </div>
-    </div>
-    <div class="sidebar-list" id="caseList">
-      <div class="case-item active" data-type="training" onclick="selectCase(this, 'Диабет')">
-        <div class="case-icon">🩸</div>
-        <div class="case-info">
-          <div class="case-name">Сахарный диабет</div>
-          <div class="case-meta">Сегодня, 14:32</div>
-        </div>
-        <span class="case-badge badge-training">Тренировка</span>
-      </div>
-      <div class="case-item" data-type="control" onclick="selectCase(this, 'Анемия')">
-        <div class="case-icon">💉</div>
-        <div class="case-info">
-          <div class="case-name">Анемия</div>
-          <div class="case-meta">Вчера, 10:15</div>
-        </div>
-        <span class="case-badge badge-control">Контроль</span>
-      </div>
-      <div class="case-item" data-type="control" onclick="selectCase(this, 'Туберкулёз')">
-        <div class="case-icon">🫁</div>
-        <div class="case-info">
-          <div class="case-name">Туберкулёз</div>
-          <div class="case-meta">18 мая</div>
-        </div>
-        <span class="case-badge badge-control">Контроль</span>
-      </div>
-      <div class="case-item" data-type="training" onclick="selectCase(this, 'Аппендицит')">
-        <div class="case-icon">🔪</div>
-        <div class="case-info">
-          <div class="case-name">Аппендицит</div>
-          <div class="case-meta">15 мая</div>
-        </div>
-        <span class="case-badge badge-training">Тренировка</span>
-      </div>
-    </div>
-    <div class="sidebar-footer">
-      <button class="new-case-btn" onclick="openModal()">
-        <span style="font-size:18px; line-height:1">+</span> Новый кейс
-      </button>
-    </div>
-  </aside>
-
-  <!-- CHAT -->
-  <section class="chat-area">
-    <div class="chat-header">
-      <div class="patient-avatar">🧑</div>
-      <div class="patient-info">
-        <div class="patient-name">Смирнов Алексей Петрович</div>
-        <div class="patient-status">
-          <span class="status-dot"></span>
-          Ожидает вопроса · Сахарный диабет
-        </div>
-      </div>
-      <div class="chat-header-actions">
-        <button class="header-action-btn" title="Информация о пациенте" onclick="togglePanel()">📋</button>
-        <button class="header-action-btn" title="История диалога">🕐</button>
-        <button class="header-action-btn danger" title="Прервать кейс" onclick="abortCase()">✕</button>
-      </div>
-    </div>
-
-    <div class="messages-container" id="messages">
-      <div class="date-divider">Сегодня</div>
-
-      <div class="msg-row system">
-        <div class="bubble">🏥 Тренировочный кейс начат · Сахарный диабет · Смирнов А.П., 52 года</div>
-      </div>
-
-      <div class="msg-row agent" style="max-width:68%">
-        <div class="msg-avatar agent-av">🧑</div>
-        <div>
-          <div class="bubble">Добрый день, доктор. Можно войти на приём?</div>
-          <div class="msg-meta">14:32</div>
-        </div>
-      </div>
-
-      <div class="msg-row user">
-        <div class="msg-avatar user-av">ИИ</div>
-        <div>
-          <div class="bubble">Добрый день! Присаживайтесь. На что жалуетесь?</div>
-          <div class="msg-meta">14:32 <span class="read-check">✓✓</span></div>
-        </div>
-      </div>
-
-      <div class="msg-row agent" style="max-width:75%">
-        <div class="msg-avatar agent-av">🧑</div>
-        <div>
-          <div class="bubble">Жалуюсь на постоянную жажду — пью по 4–5 литров воды в день. Часто хожу в туалет, особенно ночью. Ещё появилась слабость, быстро устаю, зрение немного ухудшилось.</div>
-          <div class="msg-meta">14:33</div>
-        </div>
-      </div>
-
-      <div class="msg-row user">
-        <div class="msg-avatar user-av">ИИ</div>
-        <div>
-          <div class="bubble">Как давно появились эти симптомы?</div>
-          <div class="msg-meta">14:34 <span class="read-check">✓✓</span></div>
-        </div>
-      </div>
-
-      <div class="msg-row agent" style="max-width:68%">
-        <div class="msg-avatar agent-av">🧑</div>
-        <div>
-          <div class="bubble">Примерно 2 месяца назад. Сначала думал, что просто жара, но симптомы не проходят.</div>
-          <div class="msg-meta">14:34</div>
-        </div>
-      </div>
-
-      <div class="msg-row user">
-        <div class="msg-avatar user-av">ИИ</div>
-        <div>
-          <div class="bubble">Есть ли в семье случаи сахарного диабета?</div>
-          <div class="msg-meta">14:35 <span class="read-check">✓✓</span></div>
-        </div>
-      </div>
-
-      <div class="msg-row agent" style="max-width:72%">
-        <div class="msg-avatar agent-av">🧑</div>
-        <div>
-          <div class="bubble">Да, у мамы был диабет 2-го типа. Она принимала таблетки от давления и сахара. Папа здоров.</div>
-          <div class="msg-meta">14:36</div>
-        </div>
-      </div>
-
-      <div class="typing-indicator" id="typingIndicator">
-        <div class="msg-avatar agent-av" style="width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,#5C9BD6,#3776B8);display:flex;align-items:center;justify-content:center;font-size:15px;margin-top:auto">🧑</div>
-        <div class="typing-bubble">
-          <div class="typing-dot"></div>
-          <div class="typing-dot"></div>
-          <div class="typing-dot"></div>
-        </div>
-      </div>
-    </div>
-
-    <!-- INPUT -->
-    <div class="input-area">
-      <div class="reply-buttons" id="replyButtons">
-        <button class="reply-btn" onclick="quickReply('Расскажите подробнее о симптомах')">Расскажите подробнее</button>
-        <button class="reply-btn" onclick="quickReply('Измеряли ли вы сахар крови?')">Сахар крови?</button>
-        <button class="reply-btn" onclick="quickReply('Какой у вас вес, рост?')">Вес и рост?</button>
-        <button class="reply-btn" onclick="finishConsultation()" style="background:var(--sber-green-light);color:var(--sber-green-dark);border-color:var(--sber-green);">✅ Завершить и получить отчёт</button>
-        <button class="reply-btn danger" onclick="abortCase()">❌ Прервать кейс</button>
-      </div>
-      <div class="input-row">
-        <button class="input-attach-btn" title="Прикрепить файл">📎</button>
-        <div class="input-wrap">
-          <textarea id="msgInput" placeholder="Задайте вопрос пациенту..." rows="1"
-            oninput="autoResize(this)"
-            onkeydown="handleKey(event)"></textarea>
-          <button class="send-btn" onclick="sendMessage()" title="Отправить">
-            <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M22 2L11 13M22 2L15 22L11 13L2 9L22 2Z"/></svg>
-          </button>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- RIGHT PANEL -->
-  <aside class="patient-panel" id="patientPanel">
-    <div class="panel-section">
-      <div class="patient-card-header">
-        <div class="panel-avatar">🧑</div>
-        <div>
-          <div class="panel-patient-name">Смирнов Алексей Петрович</div>
-          <div class="panel-patient-meta">52 года · Мужчина</div>
-        </div>
-      </div>
-      <div class="disease-badge">🩸 Сахарный диабет</div>
-    </div>
-
-    <div class="panel-section">
-      <div class="panel-section-title">Данные пациента</div>
-      <div class="info-row">
-        <span class="info-label">Профессия</span>
-        <span class="info-value">Инженер</span>
-      </div>
-      <div class="info-row">
-        <span class="info-label">Сессия</span>
-        <span class="info-value"><span class="tag-pill tag-success">Тренировка</span></span>
-      </div>
-      <div class="info-row">
-        <span class="info-label">Вопросов задано</span>
-        <span class="info-value" id="qCount">6</span>
-      </div>
-      <div class="info-row">
-        <span class="info-label">Продолжительность</span>
-        <span class="info-value" id="duration">4 мин</span>
-      </div>
-    </div>
-
-    <div class="panel-section">
-      <div class="panel-section-title">Прогресс сбора анамнеза</div>
-      <div class="progress-section">
-        <div class="progress-label"><span>Атрибуты болезни</span><span id="progressPct">55%</span></div>
-        <div class="progress-bar"><div class="progress-fill" id="progressFill" style="width:55%"></div></div>
-        <div class="progress-label"><span>Язык и терминология</span><span>4/5</span></div>
-        <div class="progress-bar"><div class="progress-fill" style="width:80%"></div></div>
-      </div>
-    </div>
-
-    <div class="panel-section">
-      <div class="panel-section-title">Быстрые действия</div>
-      <div class="quick-actions-grid">
-        <button class="quick-btn" onclick="quickReply('Опишите ваши основные жалобы подробнее')">📝 Жалобы</button>
-        <button class="quick-btn" onclick="quickReply('Расскажите об анамнезе жизни')">📋 Анамнез</button>
-        <button class="quick-btn" onclick="quickReply('Какие препараты принимаете?')">💊 Лекарства</button>
-        <button class="quick-btn" onclick="quickReply('Есть ли аллергические реакции?')">⚠️ Аллергии</button>
-        <button class="quick-btn quick-btn-full" onclick="finishConsultation()">✅ Завершить и получить отчёт</button>
-        <button class="quick-btn quick-btn-danger" onclick="abortCase()">Прервать кейс</button>
-      </div>
-    </div>
-  </aside>
+  <button class="wl-cta" onclick="enterApp()">Начать тренировку →</button>
+  <div class="wl-hint">v1.0 · СберМедИИ</div>
 </div>
 
-<!-- ─── NEW CASE MODAL ─── -->
-<div class="modal-overlay" id="modalOverlay" onclick="closeModalOutside(event)">
+<!-- ══════════ APP ══════════ -->
+<div id="app" class="screen hidden">
+
+  <nav class="topnav">
+    <button class="burger" onclick="toggleSB()" aria-label="Меню">☰</button>
+    <div class="brand-icon">
+      <svg viewBox="0 0 22 22" fill="none"><path d="M11 2C6 2 2 6 2 11s4 9 9 9 9-4 9-9" stroke="white" stroke-width="2.2" stroke-linecap="round"/><path d="M11 6l3 3-3 3" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M14 9H7" stroke="white" stroke-width="2" stroke-linecap="round"/></svg>
+    </div>
+    <span class="brand-name">СберМедИИ</span>
+    <div class="topnav-center">
+      <button class="nav-btn active" data-pg="chat" onclick="goPage('chat',this)">💬 Тренажёр</button>
+      <button class="nav-btn" data-pg="stats" onclick="goPage('stats',this)">📊 Статистика</button>
+      <button class="nav-btn" data-pg="kb" onclick="goPage('kb',this)">📚 База знаний</button>
+    </div>
+    <div class="topnav-user">
+      <div class="u-avatar">ВЫ</div>
+      <div class="u-name">Врач</div>
+    </div>
+  </nav>
+
+  <div class="app-body">
+    <div class="sidebar-overlay" id="sbOverlay" onclick="closeSB()"></div>
+
+    <!-- SIDEBAR -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sb-head">
+        <div class="sb-title">Мои кейсы</div>
+        <div class="sb-tabs">
+          <button class="sb-tab active" onclick="filterCases('all',this)">Все</button>
+          <button class="sb-tab" onclick="filterCases('training',this)">Тренировка</button>
+          <button class="sb-tab" onclick="filterCases('control',this)">Контроль</button>
+        </div>
+      </div>
+      <div class="sb-list" id="caseList"><div class="sb-empty">Нет кейсов.<br>Нажмите «Новый кейс»</div></div>
+      <div class="sb-foot"><button class="new-btn" onclick="openModal()"><span style="font-size:18px">+</span> Новый кейс</button></div>
+    </aside>
+
+    <!-- CHAT PAGE -->
+    <div class="page" id="p-chat">
+      <div class="chat-main">
+        <!-- empty -->
+        <div class="chat-empty" id="chatEmpty">
+          <div class="ce-icon">🩺</div>
+          <div class="ce-title">Готовы к практике?</div>
+          <div class="ce-sub">Начните новый кейс, чтобы пообщаться с виртуальным пациентом и получить оценку.</div>
+          <button class="ce-btn" onclick="openModal()">+ Начать новый кейс</button>
+        </div>
+        <!-- active -->
+        <div class="chat-active hidden" id="chatActive">
+          <div class="err-banner hidden" id="errBanner">⚠️ Нет связи с бэкендом — работает демо-режим.</div>
+          <div class="chat-hdr">
+            <div class="p-avatar" id="pAvatar">🧑</div>
+            <div class="p-info">
+              <div class="p-name" id="pName">Пациент</div>
+              <div class="p-status"><span class="dot"></span><span id="pStatus">Ожидает вопроса</span></div>
+            </div>
+            <div class="hdr-btns">
+              <button class="hbtn" title="Карточка пациента" onclick="togglePanel()">📋</button>
+              <button class="hbtn red" title="Прервать" onclick="abortCase()">✕</button>
+            </div>
+          </div>
+          <div class="msgs" id="msgs">
+            <div class="typing-row" id="typingRow">
+              <div class="mav b" id="typingAv">🧑</div>
+              <div class="typing-bbl"><div class="tdot"></div><div class="tdot"></div><div class="tdot"></div></div>
+            </div>
+          </div>
+          <div class="input-area">
+            <div class="qbtns" id="qbtns"></div>
+            <div class="irow">
+              <div class="iwrap">
+                <textarea id="msgInput" placeholder="Задайте вопрос пациенту..." rows="1"
+                  oninput="autoResize(this)" onkeydown="onKey(event)"></textarea>
+                <button class="sbtn" onclick="sendMsg()" id="sendBtn">
+                  <svg viewBox="0 0 24 24"><path d="M22 2L11 13M22 2L15 22L11 13L2 9L22 2Z"/></svg>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- PATIENT PANEL -->
+      <aside class="pat-panel" id="patPanel">
+        <div class="pp-sec">
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+            <div class="pp-avatar" id="ppAv">🧑</div>
+            <div>
+              <div style="font-size:15px;font-weight:600" id="ppName">Пациент</div>
+              <div style="font-size:12px;color:var(--gray-t)" id="ppMeta">—</div>
+            </div>
+          </div>
+          <div class="pp-pill" id="ppDisease">🩺 Заболевание</div>
+        </div>
+        <div class="pp-sec">
+          <div class="pp-label">Данные сессии</div>
+          <div class="pp-row"><span class="pp-key">Вопросов</span><span class="pp-val" id="ppQ">0</span></div>
+          <div class="pp-row"><span class="pp-key">Длительность</span><span class="pp-val" id="ppDur">0 мин</span></div>
+          <div class="pp-row"><span class="pp-key">Режим</span><span class="pp-val" id="ppMode">—</span></div>
+        </div>
+        <div class="pp-sec">
+          <div class="pp-label">Прогресс</div>
+          <div class="prg-lbl"><span>Охват анамнеза</span><span id="ppPct">0%</span></div>
+          <div class="prg-bar"><div class="prg-fill" id="ppFill" style="width:0%"></div></div>
+        </div>
+        <div class="pp-sec">
+          <div class="pp-label">Быстрые вопросы</div>
+          <div class="qa-grid">
+            <button class="qa-btn" onclick="quickQ('Опишите ваши жалобы подробнее')">📝 Жалобы</button>
+            <button class="qa-btn" onclick="quickQ('Расскажите об анамнезе жизни')">📋 Анамнез</button>
+            <button class="qa-btn" onclick="quickQ('Какие препараты принимаете?')">💊 Лекарства</button>
+            <button class="qa-btn" onclick="quickQ('Есть ли аллергии на препараты?')">⚠️ Аллергии</button>
+            <button class="qa-btn s2" onclick="finishCase()">✅ Завершить кейс</button>
+            <button class="qa-btn s2r" onclick="abortCase()">Прервать кейс</button>
+          </div>
+        </div>
+      </aside>
+    </div>
+
+    <!-- STATS PAGE -->
+    <div class="page hidden" id="p-stats">
+      <div class="pg-title">📊 Статистика</div>
+      <div class="pg-sub">История ваших тренировок</div>
+      <div class="sg">
+        <div class="sc"><div class="sc-num" id="stTotal">0</div><div class="sc-lbl">Всего кейсов</div></div>
+        <div class="sc"><div class="sc-num" id="stAvg">—</div><div class="sc-lbl">Средний балл</div></div>
+        <div class="sc"><div class="sc-num" id="stBest">—</div><div class="sc-lbl">Лучший результат</div></div>
+        <div class="sc"><div class="sc-num" id="stDone">0</div><div class="sc-lbl">Завершено</div></div>
+      </div>
+      <div style="font-size:16px;font-weight:700">История кейсов</div>
+      <div class="hl" id="histList">
+        <div class="no-hist"><div class="no-hist-icon">📋</div><div>Нет завершённых кейсов.<br>Начните тренировку!</div></div>
+      </div>
+    </div>
+
+    <!-- KB PAGE -->
+    <div class="page hidden" id="p-kb">
+      <div class="pg-title">📚 База знаний</div>
+      <div class="pg-sub">Клиническая информация по заболеваниям</div>
+      <div class="kb-grid" id="kbGrid"></div>
+    </div>
+
+  </div><!-- .app-body -->
+
+  <!-- BOTTOM NAV -->
+  <div class="bot-nav">
+    <div class="bot-inner">
+      <button class="bnav active" data-pg="chat" onclick="goPage('chat',this)"><span class="bnav-icon">💬</span>Тренажёр</button>
+      <button class="bnav" data-pg="stats" onclick="goPage('stats',this)"><span class="bnav-icon">📊</span>Статистика</button>
+      <button class="bnav" data-pg="kb" onclick="goPage('kb',this)"><span class="bnav-icon">📚</span>База знаний</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ MODAL ══ -->
+<div class="overlay" id="overlay" onclick="overlayClick(event)">
   <div class="modal">
-    <div class="modal-title">Новый кейс</div>
-    <div class="modal-sub">Выберите заболевание и режим работы</div>
-
-    <div class="modal-section-label">Заболевание</div>
-    <div class="modal-grid" id="diseaseGrid">
-      <div class="modal-card selected" data-disease="diabetes" onclick="selectDisease(this)">
-        <div class="modal-card-icon">🩸</div>
-        <div class="modal-card-name">Сахарный диабет</div>
-        <div class="modal-card-desc">II тип, взрослые</div>
+    <div class="mhandle"></div>
+    <div class="m-title">Новый кейс</div>
+    <div class="m-sub">Выберите заболевание и режим</div>
+    <div class="m-lbl">Заболевание</div>
+    <div class="d-grid" id="dGrid"></div>
+    <div class="m-lbl">Режим обучения</div>
+    <div class="mode-row">
+      <div class="m-card sel" data-mode="training" onclick="selMode(this)">
+        <div class="mc-n">📚 Тренировка</div>
+        <div class="mc-d">Болезнь известна, есть подсказки</div>
       </div>
-      <div class="modal-card" data-disease="anemia" onclick="selectDisease(this)">
-        <div class="modal-card-icon">💉</div>
-        <div class="modal-card-name">Анемия</div>
-        <div class="modal-card-desc">Железодефицитная</div>
-      </div>
-      <div class="modal-card" data-disease="tuberculosis" onclick="selectDisease(this)">
-        <div class="modal-card-icon">🫁</div>
-        <div class="modal-card-name">Туберкулёз</div>
-        <div class="modal-card-desc">Лёгочная форма</div>
-      </div>
-      <div class="modal-card" data-disease="appendicitis" onclick="selectDisease(this)">
-        <div class="modal-card-icon">🔪</div>
-        <div class="modal-card-name">Аппендицит</div>
-        <div class="modal-card-desc">Острый</div>
-      </div>
-      <div class="modal-card" data-disease="epilepsy" onclick="selectDisease(this)">
-        <div class="modal-card-icon">⚡</div>
-        <div class="modal-card-name">Эпилепсия</div>
-        <div class="modal-card-desc">Генерализованная</div>
-      </div>
-      <div class="modal-card" data-disease="random" onclick="selectDisease(this)">
-        <div class="modal-card-icon">🎲</div>
-        <div class="modal-card-name">Случайный</div>
-        <div class="modal-card-desc">Неожиданное задание</div>
+      <div class="m-card" data-mode="control" onclick="selMode(this)">
+        <div class="mc-n">🎯 Контрольный</div>
+        <div class="mc-d">Поставьте диагноз самостоятельно</div>
       </div>
     </div>
-
-    <div class="modal-section-label">Режим</div>
-    <div class="modal-mode-row" id="modeRow">
-      <div class="mode-card selected" data-mode="training" onclick="selectMode(this)">
-        <div class="mode-card-name">📚 Тренировка</div>
-        <div class="mode-card-desc">Болезнь известна, подсказки разрешены</div>
-      </div>
-      <div class="mode-card" data-mode="control" onclick="selectMode(this)">
-        <div class="mode-card-name">🎯 Контрольный</div>
-        <div class="mode-card-desc">Поставьте диагноз самостоятельно</div>
-      </div>
-    </div>
-
-    <div class="modal-btn-row">
-      <button class="modal-cancel" onclick="closeModal()">Отмена</button>
-      <button class="modal-start" onclick="startNewCase()">Начать кейс →</button>
+    <div class="m-btns">
+      <button class="btn-c" onclick="closeModal()">Отмена</button>
+      <button class="btn-s" onclick="startCase()" id="startBtn">Начать кейс →</button>
     </div>
   </div>
 </div>
 
 <script>
-  let qCount = 6;
-  let sessionActive = true;
-  let startTime = Date.now() - 240000;
+// ─── CONFIG ───────────────────────────────────────────
+const API_URL = (window.__API_URL__ && !window.__API_URL__.startsWith('__'))
+  ? window.__API_URL__.replace(/\/$/, '') : null;
 
-  setInterval(() => {
-    const mins = Math.round((Date.now() - startTime) / 60000);
-    document.getElementById('duration').textContent = mins + ' мин';
-  }, 30000);
+// ─── DATA ─────────────────────────────────────────────
+const DISEASES = [
+  { key:'diabetes',     name:'Сахарный диабет', icon:'🩸', desc:'II тип, взрослые',
+    patient:'Смирнов Алексей Петрович', age:52, gender:'Мужчина',
+    greet:'Добрый день, доктор. Можно войти на приём?',
+    kb:'Сахарный диабет 2 типа — хроническое заболевание с инсулинорезистентностью. Основные симптомы: полиурия, полидипсия, слабость, снижение зрения, медленное заживление ран. Диагностика: глюкоза натощак >7 ммоль/л, HbA1c >6,5%.',
+    syms:['Полиурия','Полидипсия','Слабость','Снижение зрения','Медленное заживление'] },
+  { key:'anemia',       name:'Анемия', icon:'💉', desc:'Железодефицитная',
+    patient:'Козлова Мария Сергеевна', age:34, gender:'Женщина',
+    greet:'Здравствуйте, доктор. Мне назначили к вам.',
+    kb:'Железодефицитная анемия — снижение гемоглобина вследствие дефицита железа. Симптомы: слабость, бледность, одышка, тахикардия, ломкость ногтей, выпадение волос. Hb <120 г/л у женщин, сывороточное железо снижено.',
+    syms:['Слабость','Бледность','Одышка','Тахикардия','Ломкость ногтей'] },
+  { key:'tuberculosis', name:'Туберкулёз', icon:'🫁', desc:'Лёгочная форма',
+    patient:'Попов Виктор Андреевич', age:41, gender:'Мужчина',
+    greet:'Добрый день. Меня направили из поликлиники.',
+    kb:'Туберкулёз лёгких — Mycobacterium tuberculosis. Симптомы: кашель >3 нед, кровохарканье, ночная потливость, субфебрилитет, похудание. Диагностика: рентген ОГК, ПЦР мокроты, проба Манту, диаскинтест.',
+    syms:['Кашель >3 нед','Ночная потливость','Субфебрилитет','Похудание','Кровохарканье'] },
+  { key:'appendicitis', name:'Аппендицит', icon:'🔪', desc:'Острый',
+    patient:'Новикова Анна Павловна', age:28, gender:'Женщина',
+    greet:'Доктор, мне очень плохо, живот сильно болит.',
+    kb:'Острый аппендицит — воспаление червеобразного отростка. Боль в правой подвздошной области, тошнота, рвота, субфебрилитет. Симптомы Щёткина-Блюмберга, Ровсинга, Ситковского. Требует экстренного оперативного лечения.',
+    syms:['Боль в ПИО','Тошнота','Рвота','Субфебрилитет','Перитонеальные симптомы'] },
+  { key:'epilepsy',     name:'Эпилепсия', icon:'⚡', desc:'Генерализованная',
+    patient:'Лебедев Дмитрий Иванович', age:19, gender:'Мужчина',
+    greet:'Здравствуйте. Меня направил невролог.',
+    kb:'Эпилепсия — хроническое заболевание с повторными судорожными приступами. ТКП, абсансы, постиктальная спутанность. Диагностика: ЭЭГ, МРТ головного мозга. Лечение: вальпроаты, карбамазепин, леветирацетам.',
+    syms:['Судорожные приступы','Потеря сознания','Абсансы','Прикус языка','Постиктальная спутанность'] },
+];
+const DM = Object.fromEntries(DISEASES.map(d=>[d.key,d]));
 
-  function autoResize(el) {
-    el.style.height = 'auto';
-    el.style.height = Math.min(el.scrollHeight, 120) + 'px';
+// ─── STATE ────────────────────────────────────────────
+const S = { sid:null, active:false, disease:null, mode:null, qCount:0, t0:null, tmr:null, apiOk:true };
+const CASES = (() => { try { return JSON.parse(localStorage.getItem('smii_cases')||'[]'); } catch { return []; } })();
+const saveC = () => localStorage.setItem('smii_cases', JSON.stringify(CASES));
+let uid = localStorage.getItem('smii_uid') || ('u'+Math.random().toString(36).slice(2,8));
+localStorage.setItem('smii_uid', uid);
+let mockIdx = 0;
+
+// ─── MOCK ─────────────────────────────────────────────
+const MOCK = {
+  _: ['Да, доктор. Ещё у меня бывает головокружение, особенно по утрам.','Знаете, я заметил что плохо сплю — часто просыпаюсь ночью.','Аппетит немного изменился, но значительно похудел без диеты.','Раньше к врачу не обращался, думал само пройдёт.','Иногда мелькают «мушки» перед глазами и немного кружится голова.'],
+  sugar:['Нет, глюкозу крови не измерял. Но по симптомам, кажется, вы правы, доктор.'],
+  weight:['Рост 178 см, вес сейчас 92 кг. Похудел на 7 кг за последние 2 месяца без диет.'],
+  pressure:['Последний раз мерял давление полгода назад — 130/85.'],
+  allergy:['Нет, аллергий я не знаю.'],
+  meds:['Принимаю только аспирин иногда при головной боли. Больше ничего постоянного.'],
+};
+function mockReply(txt) {
+  const t = txt.toLowerCase();
+  if(t.includes('сахар')||t.includes('глюкоз')||t.includes('кровь')) return MOCK.sugar[0];
+  if(t.includes('вес')||t.includes('рост')||t.includes('масс')) return MOCK.weight[0];
+  if(t.includes('давлен')) return MOCK.pressure[0];
+  if(t.includes('аллерг')) return MOCK.allergy[0];
+  if(t.includes('препарат')||t.includes('лекарств')||t.includes('таблет')) return MOCK.meds[0];
+  return MOCK._[mockIdx++ % MOCK._.length];
+}
+
+// ─── API ──────────────────────────────────────────────
+const BASE = () => (API_URL||'http://localhost:8000') + '/api/v1';
+
+async function apiStart(dkey, mode) {
+  const r = await fetch(`${BASE()}/cases/start`, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({user_id:uid, disease_type:dkey==='random'?null:dkey, mode}) });
+  if(!r.ok) throw new Error(await r.text());
+  return r.json();
+}
+async function apiMsg(sid, text) {
+  const r = await fetch(`${BASE()}/cases/${sid}/message`, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({text}) });
+  if(!r.ok) throw new Error(await r.text());
+  const d = await r.json();
+  if(d.message_id) return poll(sid, d.message_id);
+  return d.patient_reply || d.reply || d.text;
+}
+async function poll(sid, mid) {
+  for(let i=0;i<150;i++) {
+    await sleep(500);
+    try {
+      const r = await fetch(`${BASE()}/cases/${sid}/messages/${mid}`);
+      if(!r.ok) continue;
+      const d = await r.json();
+      if(d.status==='done') return d.reply;
+      if(d.status==='error') throw new Error(d.error);
+    } catch {}
   }
+  throw new Error('Timeout');
+}
+async function apiFinish(sid) {
+  const r = await fetch(`${BASE()}/cases/${sid}/finish-consultation`, {method:'POST'});
+  if(!r.ok) throw new Error(await r.text());
+  return r.json();
+}
+async function apiDel(sid) { try { await fetch(`${BASE()}/cases/${sid}`, {method:'DELETE'}); } catch {} }
 
-  function handleKey(e) {
-    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
-  }
+// ─── HELPERS ──────────────────────────────────────────
+const sleep = ms => new Promise(r=>setTimeout(r,ms));
+const esc = t => String(t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+const nowT = () => new Date().toLocaleTimeString('ru',{hour:'2-digit',minute:'2-digit'});
+const scrollB = () => { const m=document.getElementById('msgs'); requestAnimationFrame(()=>m.scrollTop=m.scrollHeight); };
+const el = id => document.getElementById(id);
 
-  function scrollToBottom() {
-    const c = document.getElementById('messages');
-    setTimeout(() => c.scrollTop = c.scrollHeight, 50);
-  }
+// ─── SCREENS ──────────────────────────────────────────
+function enterApp() {
+  el('welcome').classList.add('hidden');
+  el('app').classList.remove('hidden');
+  renderCases(); renderKB(); renderStats();
+}
 
-  function addMessage(text, role) {
-    const c = document.getElementById('messages');
-    const time = new Date().toLocaleTimeString('ru', { hour: '2-digit', minute: '2-digit' });
-    let html = '';
-    if (role === 'user') {
-      html = `<div class="msg-row user">
-        <div class="msg-avatar user-av">ИИ</div>
-        <div>
-          <div class="bubble">${escHtml(text)}</div>
-          <div class="msg-meta">${time} <span class="read-check">✓</span></div>
-        </div>
-      </div>`;
-    } else if (role === 'agent') {
-      html = `<div class="msg-row agent" style="max-width:72%">
-        <div class="msg-avatar agent-av">🧑</div>
-        <div>
-          <div class="bubble">${escHtml(text)}</div>
-          <div class="msg-meta">${time}</div>
-        </div>
-      </div>`;
-    } else if (role === 'system') {
-      html = `<div class="msg-row system">
-        <div class="bubble">${escHtml(text)}</div>
-      </div>`;
-    } else if (role === 'html') {
-      html = `<div class="msg-row agent" style="max-width:82%">
-        <div class="msg-avatar agent-av">🏥</div>
-        <div>${text}</div>
-      </div>`;
-    }
-    const div = document.createElement('div');
-    div.innerHTML = html;
-    const typing = document.getElementById('typingIndicator');
-    c.insertBefore(div.firstElementChild, typing);
-    scrollToBottom();
-  }
+// ─── ROUTING ──────────────────────────────────────────
+function goPage(pg, btn) {
+  document.querySelectorAll('.page').forEach(p=>p.classList.add('hidden'));
+  el('p-'+pg).classList.remove('hidden');
+  document.querySelectorAll('.nav-btn,.bnav').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll(`[data-pg="${pg}"]`).forEach(b=>b.classList.add('active'));
+  if(pg==='stats') renderStats();
+  closeSB();
+}
 
-  function escHtml(t) {
-    return t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-  }
+// ─── SIDEBAR ──────────────────────────────────────────
+function toggleSB() { el('sidebar').classList.toggle('on'); el('sbOverlay').classList.toggle('on'); }
+function closeSB() { el('sidebar').classList.remove('on'); el('sbOverlay').classList.remove('on'); }
 
-  function showTyping(ms) {
-    const t = document.getElementById('typingIndicator');
-    t.classList.add('visible');
-    scrollToBottom();
-    return new Promise(r => setTimeout(() => { t.classList.remove('visible'); r(); }, ms));
-  }
+// ─── PATIENT PANEL ────────────────────────────────────
+function togglePanel() { el('patPanel').classList.toggle('on'); }
 
-  const patientResponses = {
-    default: [
-      'Да, доктор. Ещё у меня иногда кружится голова, особенно после еды.',
-      'Знаете, ещё заметил, что раны заживают очень медленно. Небольшой порез на руке затягивался почти месяц.',
-      'Да, по ночам часто просыпаюсь. Выпью воды и снова ложусь, но сна нет нормального.',
-      'Аппетит, наоборот, повышенный, но вес всё равно снизился на 5 кг за последние 2 месяца.',
-      'Нет, к врачу раньше не обращался. Думал, само пройдёт.',
-    ],
-    sugar: ['Нет, не измерял. Но читал про симптомы в интернете, похоже на то, о чём вы думаете, доктор.'],
-    weight: ['Рост 178 см, вес — 94 кг. Раньше был 99 кг, похудел без диеты.'],
-    pressure: ['Давление последний раз мерял год назад — 130/85. Чувствовал иногда головную боль.'],
-  };
+// ─── CASE LIST ────────────────────────────────────────
+function renderCases(f='all') {
+  const lst = el('caseList');
+  let cc = f==='all' ? CASES : CASES.filter(c=>c.mode===f);
+  if(!cc.length) { lst.innerHTML='<div class="sb-empty">Нет кейсов.<br>Нажмите «Новый кейс»</div>'; return; }
+  lst.innerHTML = cc.slice().reverse().map(c=>`
+    <div class="case-row ${c.active?'active':''}" data-t="${c.mode}">
+      <div class="case-ico">${c.icon}</div>
+      <div class="case-inf"><div class="case-name">${esc(c.name)}</div><div class="case-meta">${c.date}${c.score!=null?' · '+c.score+'%':''}</div></div>
+      <span class="case-badge ${c.mode==='training'?'bt':'bc'}">${c.mode==='training'?'Тренировка':'Контроль'}</span>
+    </div>`).join('');
+}
+function filterCases(f,btn) {
+  document.querySelectorAll('.sb-tab').forEach(t=>t.classList.remove('active'));
+  btn.classList.add('active'); renderCases(f);
+}
 
-  let responseIdx = 0;
+// ─── MODAL ────────────────────────────────────────────
+function openModal() {
+  el('dGrid').innerHTML = DISEASES.map((d,i)=>`
+    <div class="d-card ${i===0?'sel':''}" data-key="${d.key}" onclick="selD(this)">
+      <div class="d-icon">${d.icon}</div><div class="d-name">${d.name}</div><div class="d-desc">${d.desc}</div>
+    </div>`).join('');
+  el('overlay').classList.add('on'); closeSB();
+}
+function closeModal() { el('overlay').classList.remove('on'); }
+function overlayClick(e) { if(e.target===el('overlay')) closeModal(); }
+function selD(el2) { document.querySelectorAll('.d-card').forEach(c=>c.classList.remove('sel')); el2.classList.add('sel'); }
+function selMode(el2) { document.querySelectorAll('.m-card').forEach(c=>c.classList.remove('sel')); el2.classList.add('sel'); }
 
-  async function sendMessage() {
-    const input = document.getElementById('msgInput');
-    const text = input.value.trim();
-    if (!text || !sessionActive) return;
-    input.value = '';
-    input.style.height = '';
-    addMessage(text, 'user');
+// ─── START CASE ───────────────────────────────────────
+async function startCase() {
+  const dEl = document.querySelector('.d-card.sel');
+  const mEl = document.querySelector('.m-card.sel');
+  if(!dEl||!mEl) return;
+  const dkey = dEl.dataset.key;
+  const mode = mEl.dataset.mode;
+  const d = DM[dkey] || DISEASES[0];
 
-    qCount++;
-    document.getElementById('qCount').textContent = qCount;
-    const pct = Math.min(30 + qCount * 7, 95);
-    document.getElementById('progressPct').textContent = pct + '%';
-    document.getElementById('progressFill').style.width = pct + '%';
+  const btn = el('startBtn');
+  btn.innerHTML = '<span class="spin"></span>';
+  btn.disabled = true;
 
-    const delay = 1000 + Math.random() * 1500;
-    await showTyping(delay);
+  if(S.sid) await apiDel(S.sid);
 
-    let resp;
-    const low = text.toLowerCase();
-    if (low.includes('сахар') || low.includes('глюкоз') || low.includes('кровь')) {
-      resp = patientResponses.sugar[0];
-    } else if (low.includes('вес') || low.includes('рост') || low.includes('масса')) {
-      resp = patientResponses.weight[0];
-    } else if (low.includes('давлен')) {
-      resp = patientResponses.pressure[0];
-    } else {
-      resp = patientResponses.default[responseIdx % patientResponses.default.length];
-      responseIdx++;
-    }
-    addMessage(resp, 'agent');
+  let sid = null, greet = d.greet;
+  if(API_URL) {
+    try { const r = await apiStart(dkey, mode); sid = r.session_id||r.id; if(r.greeting) greet=r.greeting; S.apiOk=true; el('errBanner').classList.add('hidden'); }
+    catch { S.apiOk=false; el('errBanner').classList.remove('hidden'); }
+  } else { S.apiOk=false; el('errBanner').classList.remove('hidden'); }
 
-    const readCheck = document.querySelector('.msg-row.user:last-of-type .read-check');
-    if (readCheck) readCheck.textContent = '✓✓';
-  }
+  btn.innerHTML = 'Начать кейс →'; btn.disabled=false; closeModal();
 
-  function quickReply(text) {
-    document.getElementById('msgInput').value = text;
-    sendMessage();
-  }
+  S.sid=sid; S.active=true; S.disease=d; S.mode=mode; S.qCount=0; S.t0=Date.now(); mockIdx=0;
+  clearInterval(S.tmr);
+  S.tmr = setInterval(()=>{ const m=Math.round((Date.now()-S.t0)/60000); el('ppDur').textContent=m+' мин'; }, 15000);
 
-  function finishConsultation() {
-    if (!sessionActive) return;
-    sessionActive = false;
-    addMessage('✅ Завершить и получить отчёт', 'user');
-    showTyping(2000).then(() => {
-      const reportHtml = `<div class="report-card">
-        <div class="report-tabs">
-          <button class="report-tab active" onclick="showTab(this,'attrs')">📋 Атрибуты</button>
-          <button class="report-tab" onclick="showTab(this,'lang')">📝 Язык</button>
-          <button class="report-tab" onclick="showTab(this,'total')">🏆 Итог</button>
-        </div>
-        <div class="report-body" id="tabAttrs">
-          <div style="text-align:center;margin-bottom:12px">
-            <div class="score-circle" style="background:var(--sber-green-light);border:3px solid var(--sber-green)">
-              <div class="score-num" style="color:var(--sber-green)">${Math.min(30 + qCount * 7, 95)}%</div>
-              <div class="score-label">охват</div>
-            </div>
-          </div>
-          <div class="attr-row"><span>Основные жалобы</span><span class="attr-check">✓</span></div>
-          <div class="attr-row"><span>Полиурия и полидипсия</span><span class="attr-check">✓</span></div>
-          <div class="attr-row"><span>Наследственный анамнез</span><span class="attr-check">✓</span></div>
-          <div class="attr-row"><span>Динамика веса</span><span class="attr-check">✓</span></div>
-          <div class="attr-row"><span>Нарушение зрения</span><span class="attr-check">✓</span></div>
-          <div class="attr-row"><span>Гликемический профиль</span><span class="attr-cross">✗</span></div>
-          <div class="attr-row"><span>Сопутствующие ЛС</span><span class="attr-cross">✗</span></div>
-        </div>
-        <div class="report-body" id="tabLang" style="display:none">
-          <div style="text-align:center;margin-bottom:12px">
-            <div class="score-circle" style="background:#E3F2FD;border:3px solid #1976D2">
-              <div class="score-num" style="color:#1565C0">4/5</div>
-              <div class="score-label">оценка</div>
-            </div>
-          </div>
-          <div style="font-size:13px;color:var(--sber-gray-text);margin-bottom:10px">Профессиональная медицинская терминология использована корректно. Вопросы сформулированы чётко.</div>
-          <div style="font-size:13px;padding:8px;background:var(--sber-gray);border-radius:8px">💡 Рекомендация: используйте термин «полиурия» вместо «часто ходит в туалет»</div>
-        </div>
-        <div class="report-body" id="tabTotal" style="display:none">
-          <div style="text-align:center;margin-bottom:14px">
-            <div class="score-circle" style="background:var(--sber-green-light);border:3px solid var(--sber-green)">
-              <div class="score-num" style="color:var(--sber-green)">${Math.round((Math.min(30 + qCount * 7, 95) * 0.7 + 80 * 0.3))}%</div>
-              <div class="score-label">итог</div>
-            </div>
-          </div>
-          <div class="attr-row"><span>Охват атрибутов (70%)</span><span style="font-weight:600">${Math.min(30 + qCount * 7, 95)}%</span></div>
-          <div class="attr-row"><span>Качество языка (30%)</span><span style="font-weight:600">80%</span></div>
-          <div style="margin-top:12px;padding:10px;background:var(--sber-green-light);border-radius:10px;font-size:13px;color:var(--sber-green-dark)">
-            ✅ Хорошая работа! Для следующего кейса уточните данные о принимаемых препаратах и гликемическом профиле.
-          </div>
-        </div>
-      </div>`;
-      addMessage(reportHtml, 'html');
+  // UI
+  el('chatEmpty').classList.add('hidden');
+  const ca = el('chatActive'); ca.classList.remove('hidden');
+  el('pAvatar').textContent=d.icon; el('pName').textContent=d.patient;
+  el('pStatus').textContent=`Ожидает вопроса · ${d.name}`;
+  el('ppAv').textContent=d.icon; el('ppName').textContent=d.patient;
+  el('ppMeta').textContent=d.age?`${d.age} лет · ${d.gender}`:'—';
+  el('ppDisease').textContent=`${d.icon} ${d.name}`;
+  el('ppMode').textContent=mode==='training'?'Тренировка':'Контроль';
+  el('ppQ').textContent='0'; el('ppDur').textContent='0 мин'; el('ppPct').textContent='0%'; el('ppFill').style.width='0%';
+  el('typingAv').textContent=d.icon;
 
-      document.getElementById('replyButtons').innerHTML = `
-        <button class="reply-btn" onclick="startNewCaseFromChat()">🎯 Новый кейс</button>
-        <button class="reply-btn" onclick="location.reload()">🔄 Начать заново</button>
-      `;
-    });
-  }
+  el('msgs').innerHTML = `<div class="typing-row" id="typingRow">
+    <div class="mav b" id="typingAv">${d.icon}</div>
+    <div class="typing-bbl"><div class="tdot"></div><div class="tdot"></div><div class="tdot"></div></div>
+  </div>`;
 
-  function showTab(btn, tab) {
-    btn.closest('.report-card').querySelectorAll('.report-tab').forEach(t => t.classList.remove('active'));
-    btn.classList.add('active');
-    ['tabAttrs','tabLang','tabTotal'].forEach(id => {
-      const el = btn.closest('.report-card').querySelector('#' + id);
-      if (el) el.style.display = 'none';
-    });
-    const map = { attrs: 'tabAttrs', lang: 'tabLang', total: 'tabTotal' };
-    const target = btn.closest('.report-card').querySelector('#' + map[tab]);
-    if (target) target.style.display = 'block';
-  }
+  setQbtns('start');
 
-  function abortCase() {
-    if (!confirm('Прервать текущий кейс?')) return;
-    sessionActive = false;
-    addMessage('❌ Кейс прерван', 'system');
-    document.getElementById('replyButtons').innerHTML = `
-      <button class="reply-btn" onclick="openModal()">+ Новый кейс</button>
-    `;
-  }
+  const entry = { id:Date.now(), key:dkey, name:d.name, icon:d.icon, mode, date:new Date().toLocaleDateString('ru',{day:'numeric',month:'short'}), active:true, score:null };
+  CASES.push(entry); saveC(); renderCases();
 
-  function startNewCaseFromChat() { openModal(); }
+  goPage('chat', null);
+  await showTyping(1300);
+  addMsg(greet,'bot');
+}
 
-  function togglePanel() {
-    const p = document.getElementById('patientPanel');
-    p.style.display = p.style.display === 'none' ? '' : 'none';
-  }
+// ─── MESSAGING ────────────────────────────────────────
+async function sendMsg() {
+  const inp = el('msgInput');
+  const txt = inp.value.trim();
+  if(!txt||!S.active) return;
+  inp.value=''; inp.style.height=''; el('sendBtn').disabled=true;
+  addMsg(txt,'user'); updateProg();
+  try {
+    showTyping(0);
+    let reply;
+    if(S.sid && S.apiOk) {
+      try { reply = await apiMsg(S.sid, txt); }
+      catch { S.apiOk=false; el('errBanner').classList.remove('hidden'); await sleep(700+Math.random()*1000); reply=mockReply(txt); }
+    } else { await sleep(700+Math.random()*1200); reply=mockReply(txt); }
+    hideTyping(); addMsg(reply,'bot');
+  } finally { el('sendBtn').disabled=false; }
+}
 
-  /* ─── MODAL ─── */
-  function openModal() {
-    document.getElementById('modalOverlay').classList.add('open');
-  }
-  function closeModal() {
-    document.getElementById('modalOverlay').classList.remove('open');
-  }
-  function closeModalOutside(e) {
-    if (e.target === document.getElementById('modalOverlay')) closeModal();
-  }
-  function selectDisease(el) {
-    document.querySelectorAll('.modal-card').forEach(c => c.classList.remove('selected'));
-    el.classList.add('selected');
-  }
-  function selectMode(el) {
-    document.querySelectorAll('.mode-card').forEach(c => c.classList.remove('selected'));
-    el.classList.add('selected');
-  }
+function quickQ(t) { el('msgInput').value=t; sendMsg(); }
+function onKey(e) { if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendMsg();} }
+function autoResize(el2) { el2.style.height='auto'; el2.style.height=Math.min(el2.scrollHeight,96)+'px'; }
+function updateProg() {
+  S.qCount++;
+  el('ppQ').textContent=S.qCount;
+  const p=Math.min(10+S.qCount*9,95);
+  el('ppPct').textContent=p+'%'; el('ppFill').style.width=p+'%';
+  if(S.qCount===3) setQbtns('mid');
+}
 
-  const diseaseNames = {
-    diabetes: { name: 'Сахарный диабет', icon: '🩸', patient: 'Смирнов Алексей Петрович', age: '52', gender: 'Мужчина', greeting: 'Добрый день, доктор. Можно войти на приём?' },
-    anemia: { name: 'Анемия', icon: '💉', patient: 'Козлова Мария Сергеевна', age: '34', gender: 'Женщина', greeting: 'Здравствуйте, доктор. Мне назначили к вам.' },
-    tuberculosis: { name: 'Туберкулёз', icon: '🫁', patient: 'Попов Виктор Андреевич', age: '41', gender: 'Мужчина', greeting: 'Добрый день. Меня направили из поликлиники.' },
-    appendicitis: { name: 'Аппендицит', icon: '🔪', patient: 'Новикова Анна Павловна', age: '28', gender: 'Женщина', greeting: 'Доктор, мне очень плохо, живот сильно болит.' },
-    epilepsy: { name: 'Эпилепсия', icon: '⚡', patient: 'Лебедев Дмитрий Иванович', age: '19', gender: 'Мужчина', greeting: 'Здравствуйте. Меня направил невролог.' },
-    random: { name: 'Случайный кейс', icon: '🎲', patient: 'Неизвестный пациент', age: '?', gender: '?', greeting: 'Добрый день, доктор.' },
-  };
+function addMsg(txt,role) {
+  const msgs=el('msgs'), tr=el('typingRow'), t=nowT();
+  let html='';
+  if(role==='user') html=`<div class="mrow user"><div class="mav u">ВЫ</div><div><div class="bbl">${esc(txt)}</div><div class="mtime">${t} <span class="tick">✓</span></div></div></div>`;
+  else if(role==='bot') html=`<div class="mrow bot"><div class="mav b">${S.disease?S.disease.icon:'🧑'}</div><div><div class="bbl">${esc(txt)}</div><div class="mtime">${t}</div></div></div>`;
+  else if(role==='sys') html=`<div class="mrow sys"><div class="bbl">${esc(txt)}</div></div>`;
+  else if(role==='html') html=`<div class="mrow bot" style="max-width:92%"><div class="mav b">🏥</div><div>${txt}</div></div>`;
+  const d=document.createElement('div'); d.innerHTML=html;
+  msgs.insertBefore(d.firstElementChild, tr); scrollB();
+}
 
-  function startNewCase() {
-    const diseaseEl = document.querySelector('.modal-card.selected');
-    const modeEl = document.querySelector('.mode-card.selected');
-    if (!diseaseEl || !modeEl) return;
+async function showTyping(ms) { const t=el('typingRow'); t.classList.add('on'); scrollB(); if(ms>0) await sleep(ms); }
+function hideTyping() { el('typingRow').classList.remove('on'); }
 
-    const dKey = diseaseEl.dataset.disease;
-    const mode = modeEl.dataset.mode;
-    const d = diseaseNames[dKey] || diseaseNames.random;
+function setQbtns(ph) {
+  const b=el('qbtns');
+  if(ph==='start') b.innerHTML=`
+    <button class="qbtn" onclick="quickQ('Добрый день! Присаживайтесь, пожалуйста. На что жалуетесь?')">Приветствие</button>
+    <button class="qbtn" onclick="quickQ('Расскажите, что вас беспокоит?')">Что беспокоит?</button>
+    <button class="qbtn fin" onclick="finishCase()">✅ Завершить</button>
+    <button class="qbtn red" onclick="abortCase()">✕ Прервать</button>`;
+  else if(ph==='mid') b.innerHTML=`
+    <button class="qbtn" onclick="quickQ('Как давно это началось?')">Давно?</button>
+    <button class="qbtn" onclick="quickQ('Измеряли сахар крови?')">Сахар?</button>
+    <button class="qbtn" onclick="quickQ('Есть наследственные заболевания?')">Наследственность</button>
+    <button class="qbtn fin" onclick="finishCase()">✅ Завершить</button>
+    <button class="qbtn red" onclick="abortCase()">✕ Прервать</button>`;
+  else if(ph==='done') b.innerHTML=`
+    <button class="qbtn" onclick="openModal()">🎯 Новый кейс</button>
+    <button class="qbtn" onclick="goPage('stats',null)">📊 Статистика</button>`;
+}
 
-    closeModal();
+// ─── FINISH ───────────────────────────────────────────
+async function finishCase() {
+  if(!S.active) return; S.active=false;
+  addMsg('✅ Завершить консультацию и получить отчёт','user');
+  await showTyping(2200);
+  let data=null;
+  if(S.sid&&S.apiOk) try{data=await apiFinish(S.sid);}catch{}
+  const pct=Math.min(10+S.qCount*9,95), lang=74+Math.round(Math.random()*21), total=Math.round(pct*.7+lang*.3);
+  const [sc,sb,sbo]= total>=80?['var(--green)','var(--green-l)','var(--green)']:total>=60?['#F59E0B','#FFF8E1','#F59E0B']:['#EF5350','#FFEBEE','#EF5350'];
+  const attrs=(data?.attributes)||[
+    {n:'Основные жалобы',ok:true},{n:'Анамнез заболевания',ok:S.qCount>=2},
+    {n:'Семейный анамнез',ok:S.qCount>=3},{n:'Динамика симптомов',ok:S.qCount>=4},
+    {n:'Текущие препараты',ok:S.qCount>=5},{n:'Гликемический профиль',ok:S.qCount>=7},
+  ];
+  hideTyping();
+  addMsg(`<div class="rep-card">
+    <div class="rep-tabs">
+      <button class="rep-tab active" onclick="showTab(this,'a')">📋 Анамнез</button>
+      <button class="rep-tab" onclick="showTab(this,'l')">📝 Язык</button>
+      <button class="rep-tab" onclick="showTab(this,'t')">🏆 Итог</button>
+    </div>
+    <div class="rep-body" id="ra">
+      <div style="text-align:center;margin-bottom:12px"><div class="sc-circle" style="background:${sb};border:3px solid ${sbo}"><div class="sc-n" style="color:${sc}">${pct}%</div><div class="sc-l">охват</div></div></div>
+      ${attrs.map(a=>`<div class="arow"><span>${esc(a.n)}</span><span class="${a.ok?'ok':'no'}">${a.ok?'✓':'✗'}</span></div>`).join('')}
+    </div>
+    <div class="rep-body" id="rl" style="display:none">
+      <div style="text-align:center;margin-bottom:12px"><div class="sc-circle" style="background:#E3F2FD;border:3px solid #1976D2"><div class="sc-n" style="color:#1565C0">${lang}%</div><div class="sc-l">язык</div></div></div>
+      <div style="font-size:13px;color:var(--gray-t);margin-bottom:8px">Профессиональная терминология использована ${lang>=80?'хорошо.':'удовлетворительно.'}</div>
+      <div style="font-size:13px;padding:8px;background:var(--gray);border-radius:8px">💡 Используйте: полиурия, полидипсия, гипергликемия, инсулинорезистентность.</div>
+    </div>
+    <div class="rep-body" id="rt" style="display:none">
+      <div style="text-align:center;margin-bottom:12px"><div class="sc-circle" style="background:${sb};border:3px solid ${sbo}"><div class="sc-n" style="color:${sc}">${total}%</div><div class="sc-l">итог</div></div></div>
+      <div class="arow"><span>Анамнез (70%)</span><span style="font-weight:600">${pct}%</span></div>
+      <div class="arow"><span>Язык (30%)</span><span style="font-weight:600">${lang}%</span></div>
+      <div style="margin-top:10px;padding:10px;background:${sb};border-radius:10px;font-size:13px;color:${sc}">
+        ${total>=80?'✅ Отлично! Продолжайте в том же духе.':total>=60?'👍 Неплохо! Уточняйте анамнез подробнее.':'📚 Нужно больше практики. Задавайте больше вопросов.'}
+      </div>
+    </div>
+  </div>`,'html');
+  const last=CASES[CASES.length-1]; if(last){last.score=total;last.active=false;saveC();}
+  setQbtns('done'); clearInterval(S.tmr); renderCases();
+}
 
-    const msgs = document.getElementById('messages');
-    msgs.innerHTML = `<div class="date-divider">Сегодня</div>`;
-    sessionActive = true;
-    qCount = 0;
-    responseIdx = 0;
-    startTime = Date.now();
+function showTab(btn,t) {
+  const card=btn.closest('.rep-card');
+  card.querySelectorAll('.rep-tab').forEach(b=>b.classList.remove('active')); btn.classList.add('active');
+  ['ra','rl','rt'].forEach(id=>{const e=card.querySelector('#'+id);if(e)e.style.display='none';});
+  const m={a:'ra',l:'rl',t:'rt'}; const target=card.querySelector('#'+m[t]); if(target)target.style.display='block';
+}
 
-    document.getElementById('qCount').textContent = '0';
-    document.getElementById('progressPct').textContent = '0%';
-    document.getElementById('progressFill').style.width = '0%';
-    document.getElementById('duration').textContent = '0 мин';
+async function abortCase() {
+  if(!confirm('Прервать текущий кейс?')) return;
+  S.active=false; if(S.sid)await apiDel(S.sid); S.sid=null; clearInterval(S.tmr);
+  addMsg('❌ Кейс прерван','sys'); setQbtns('done');
+  const last=CASES[CASES.length-1]; if(last&&last.active){last.active=false;saveC();} renderCases();
+}
 
-    addMessage(`🏥 ${mode === 'training' ? 'Тренировочный' : 'Контрольный'} кейс начат · ${d.name} · ${d.patient}, ${d.age} лет`, 'system');
+// ─── STATS ────────────────────────────────────────────
+function renderStats() {
+  const done=CASES.filter(c=>c.score!=null), sc=done.map(c=>c.score);
+  el('stTotal').textContent=CASES.length;
+  el('stAvg').textContent=sc.length?Math.round(sc.reduce((a,b)=>a+b,0)/sc.length)+'%':'—';
+  el('stBest').textContent=sc.length?Math.max(...sc)+'%':'—';
+  el('stDone').textContent=done.length;
+  const lst=el('histList');
+  if(!done.length){lst.innerHTML='<div class="no-hist"><div class="no-hist-icon">📋</div><div>Нет завершённых кейсов.<br>Начните тренировку!</div></div>';return;}
+  lst.innerHTML=done.slice().reverse().map(c=>{
+    const cls=c.score>=80?'sg-good':c.score>=60?'sg-mid':'sg-low';
+    return `<div class="hi"><div class="hi-icon">${c.icon}</div><div class="hi-inf"><div class="hi-name">${esc(c.name)}</div><div class="hi-meta">${c.date} · ${c.mode==='training'?'Тренировка':'Контроль'}</div></div><div class="hi-sc ${cls}">${c.score}%</div></div>`;
+  }).join('');
+}
 
-    setTimeout(() => {
-      showTyping(800).then(() => addMessage(d.greeting, 'agent'));
-    }, 200);
+// ─── KB ───────────────────────────────────────────────
+function renderKB() {
+  el('kbGrid').innerHTML=DISEASES.map(d=>`
+    <div class="kb-card" onclick="toggleKB(this)">
+      <div class="kb-hdr"><div class="kb-icon">${d.icon}</div><div><div class="kb-n">${d.name}</div><div class="kb-c">${d.desc}</div></div><span class="kb-arrow">▼</span></div>
+      <div class="kb-tags">${d.syms.map(s=>`<span class="kb-tag">${s}</span>`).join('')}</div>
+      ${d.kb?`<div class="kb-body">${esc(d.kb)}</div>`:''}
+    </div>`).join('');
+}
+function toggleKB(c) { c.classList.toggle('open'); }
 
-    document.querySelector('.chat-header .patient-name').textContent = d.patient;
-    document.querySelector('.chat-header .patient-status').innerHTML = `<span class="status-dot"></span> Ожидает вопроса · ${d.name}`;
-    document.querySelector('.panel-patient-name').textContent = d.patient;
-    document.querySelector('.panel-patient-meta').textContent = d.age + ' лет · ' + d.gender;
-    document.querySelector('.disease-badge').innerHTML = `${d.icon} ${d.name}`;
-
-    document.getElementById('replyButtons').innerHTML = `
-      <button class="reply-btn" onclick="quickReply('Добрый день! Присаживайтесь. На что жалуетесь?')">Основные жалобы</button>
-      <button class="reply-btn" onclick="quickReply('Расскажите, что вас беспокоит?')">Что беспокоит?</button>
-      <button class="reply-btn" onclick="finishConsultation()" style="background:var(--sber-green-light);color:var(--sber-green-dark);border-color:var(--sber-green);">✅ Завершить и получить отчёт</button>
-      <button class="reply-btn danger" onclick="abortCase()">❌ Прервать кейс</button>
-    `;
-  }
-
-  /* ─── SIDEBAR ─── */
-  function selectCase(el, name) {
-    document.querySelectorAll('.case-item').forEach(c => c.classList.remove('active'));
-    el.classList.add('active');
-  }
-
-  function filterCases(type, btn) {
-    document.querySelectorAll('.mode-tab').forEach(t => t.classList.remove('active'));
-    btn.classList.add('active');
-    document.querySelectorAll('.case-item').forEach(item => {
-      item.style.display = (type === 'all' || item.dataset.type === type) ? '' : 'none';
-    });
-  }
-
-  scrollToBottom();
+// ─── INIT ─────────────────────────────────────────────
+renderKB();
 </script>
 </body>
 </html>
