@@ -1,0 +1,16 @@
+{
+  "name": "sber-med-chat",
+  "version": "1.0.0",
+  "description": "СберМедИИ — веб-тренажёр для врачей",
+  "scripts": {
+    "dev": "npx serve public -p 3000",
+    "build": "cp -r public dist",
+    "deploy": "gh-pages -d public",
+    "preview": "npx serve public"
+  },
+  "devDependencies": {
+    "gh-pages": "^6.1.1",
+    "serve": "^14.2.3"
+  },
+  "homepage": "https://YOUR_USERNAME.github.io/sber-med-chat"
+}
