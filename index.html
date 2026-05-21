@@ -777,7 +777,9 @@ async function sendMsg() {
   if(reply) { S.lastBotMsgs.push(reply); addMsg(reply,'bot'); }
 }
 
+const _qpool = [];  // глобальный пул текстов подсказок — обходит проблемы экранирования в onclick
 function quickQ(t) { el('msgInput').value=t; sendMsg(); }
+function _qClick(i) { quickQ(_qpool[i]); }
 function onKey(e) { if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendMsg();} }
 function autoResize(el2) { el2.style.height='auto'; el2.style.height=Math.min(el2.scrollHeight,96)+'px'; }
 
@@ -864,9 +866,11 @@ function updateProg(userText='') {
 function updateQbtns() {
   if(!S.disease || !S.active) return;
   const hints = getContextHints(S.disease.key, S.qCount);
+  _qpool.length = 0;
+  hints.forEach(([, q]) => _qpool.push(q));
   const b = el('qbtns');
-  b.innerHTML = hints.map(([label, q]) =>
-    `<button class="qbtn" onclick="quickQ('${q.replace(/'/g,"\\'")}'">${label}</button>`
+  b.innerHTML = hints.map(([label], i) =>
+    `<button class="qbtn" onclick="_qClick(${i})">${label}</button>`
   ).join('') +
   `<button class="qbtn fin" onclick="finishCase()">✅ Завершить</button>
    <button class="qbtn red" onclick="abortCase()">✕ Прервать</button>`;
