@@ -2,16 +2,18 @@
   "name": "sber-med-chat",
   "version": "1.0.0",
   "description": "СберМедИИ — веб-тренажёр для врачей",
+  "main": "server.js",
   "scripts": {
-    "start": "npx serve public -p ${PORT:-3000}",
-    "dev": "npx serve public -p 3000",
-    "build": "cp -r public dist",
-    "deploy": "gh-pages -d public",
-    "preview": "npx serve public"
+    "start": "node server.js",
+    "dev": "node server.js",
+    "build": "echo 'No build step needed'",
+    "deploy": "gh-pages -d public"
+  },
+  "dependencies": {
+    "express": "^4.19.2"
   },
   "devDependencies": {
-    "gh-pages": "^6.1.1",
-    "serve": "^14.2.3"
+    "gh-pages": "^6.1.1"
   },
   "homepage": "https://YOUR_USERNAME.github.io/sber-med-chat"
 }
