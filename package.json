@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "СберМедИИ — веб-тренажёр для врачей",
   "scripts": {
+    "start": "npx serve public -p ${PORT:-3000}",
     "dev": "npx serve public -p 3000",
     "build": "cp -r public dist",
     "deploy": "gh-pages -d public",
