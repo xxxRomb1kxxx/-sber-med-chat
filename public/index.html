@@ -514,8 +514,9 @@ html, body { height: 100%; overflow: hidden; font-family: -apple-system, BlinkMa
 
 <script>
 // ─── CONFIG ───────────────────────────────────────────
-const API_URL = (window.__API_URL__ && !window.__API_URL__.startsWith('__'))
-  ? window.__API_URL__.replace(/\/$/, '') : null;
+// Если сервер проксирует /api -> бэку, шлём на /api (относительно себя).
+// Если API_URL пустой — демо-режим с mock-ответами.
+const HAS_BACKEND = window.__API_URL__ === 'proxy';
 
 // ─── DATA ─────────────────────────────────────────────
 const DISEASES = [
@@ -575,7 +576,8 @@ function mockReply(txt) {
 }
 
 // ─── API ──────────────────────────────────────────────
-const BASE = () => (API_URL||'http://localhost:8000') + '/api/v1';
+// Всегда шлём на /api/v1 (проксируется server.js на бэк без CORS)
+const BASE = () => '/api/v1';
 
 async function apiStart(dkey, mode) {
   const r = await fetch(`${BASE()}/cases/start`, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({user_id:uid, disease_type:dkey==='random'?null:dkey, mode}) });
@@ -686,7 +688,7 @@ async function startCase() {
   if(S.sid) await apiDel(S.sid);
 
   let sid = null, greet = d.greet;
-  if(API_URL) {
+  if(HAS_BACKEND) {
     try { const r = await apiStart(dkey, mode); sid = r.session_id||r.id; if(r.greeting) greet=r.greeting; S.apiOk=true; el('errBanner').classList.add('hidden'); }
     catch { S.apiOk=false; el('errBanner').classList.remove('hidden'); }
   } else { S.apiOk=false; el('errBanner').classList.remove('hidden'); }
