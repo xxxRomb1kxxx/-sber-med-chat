@@ -7,11 +7,12 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 const API_URL = (process.env.API_URL || '').replace(/\/$/, '');
 
-// Proxy /api/* -> backend, bypasses CORS completely
+// Proxy /api/* -> backend без срезания пути, обходит CORS
 if (API_URL) {
-  app.use('/api', createProxyMiddleware({
+  app.use(createProxyMiddleware({
     target: API_URL,
     changeOrigin: true,
+    pathFilter: '/api',   // только /api/* — путь не срезается
     on: {
       error: (err, req, res) => {
         console.error('Proxy error:', err.message);
@@ -19,7 +20,7 @@ if (API_URL) {
       },
     },
   }));
-  console.log(`Proxy /api -> ${API_URL}`);
+  console.log(`Proxy /api/* -> ${API_URL}/api/*`);
 }
 
 // Health check
