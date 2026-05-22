@@ -1541,7 +1541,11 @@ let _recActive = false;
     inp.value = transcript;
     autoResize(inp);
   };
-  _recognition.onend = () => _stopRec(false);
+  _recognition.onend = () => {
+    const txt = el('msgInput').value.trim();
+    _stopRec(false);
+    if (txt && S.active && !el('msgInput').disabled) sendMsg();
+  };
   _recognition.onerror = (e) => {
     _stopRec(false);
     if (e.error !== 'no-speech' && e.error !== 'aborted') showToast('Ошибка микрофона: ' + e.error);
