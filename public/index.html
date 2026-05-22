@@ -182,6 +182,15 @@ html, body { height: 100%; overflow: hidden; font-family: -apple-system, BlinkMa
 .sbtn:active { transform: scale(.95); }
 .sbtn svg { width: 17px; height: 17px; fill: #fff; }
 .sbtn:disabled { opacity: .5; cursor: default; }
+.mbtn { width: 38px; height: 38px; border-radius: 50%; background: transparent; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; color: var(--gray-t); transition: all .15s; }
+.mbtn:hover { background: var(--gray-2); color: var(--dark); }
+.mbtn svg { width: 18px; height: 18px; }
+.mbtn.recording { color: #C62828; animation: micPulse 1s ease-in-out infinite; }
+.mbtn:disabled { opacity: .4; cursor: default; pointer-events: none; }
+@keyframes micPulse {
+  0%,100% { box-shadow: 0 0 0 0 rgba(198,40,40,.35); background: #FFEBEE; }
+  50%      { box-shadow: 0 0 0 7px rgba(198,40,40,0); background: #FFCDD2; }
+}
 
 /* patient panel */
 .pat-panel { width: 272px; flex-shrink: 0; background: #fff; border-left: 1px solid var(--border); display: flex; flex-direction: column; overflow-y: auto; transition: transform .25s; }
@@ -643,6 +652,9 @@ html, body { height: 100%; overflow: hidden; font-family: -apple-system, BlinkMa
               <div class="iwrap">
                 <textarea id="msgInput" placeholder="Задайте вопрос пациенту..." rows="1"
                   oninput="autoResize(this)" onkeydown="onKey(event)"></textarea>
+                <button class="mbtn" id="micBtn" onclick="toggleVoice()" title="Голосовой ввод">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a3 3 0 0 1 3 3v7a3 3 0 0 1-6 0V5a3 3 0 0 1 3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
+                </button>
                 <button class="sbtn" onclick="sendMsg()" id="sendBtn">
                   <svg viewBox="0 0 24 24"><path d="M22 2L11 13M22 2L15 22L11 13L2 9L22 2Z"/></svg>
                 </button>
@@ -1068,8 +1080,10 @@ function viewCase(c) {
   el('qbtns').innerHTML = `
     <button class="qbtn fin" onclick="backToActive()">${backLabel}</button>
     <button class="qbtn" onclick="openModal()">🎯 Новый кейс</button>`;
+  _stopRec(true);
   el('msgInput').disabled = true;
   el('sendBtn').disabled = true;
+  el('micBtn').disabled = true;
   el('msgInput').placeholder = 'Режим просмотра истории';
   scrollB();
 }
@@ -1077,6 +1091,7 @@ function viewCase(c) {
 function backToActive() {
   el('msgInput').disabled = false;
   el('sendBtn').disabled = false;
+  el('micBtn').disabled = false;
   el('msgInput').placeholder = 'Задайте вопрос пациенту...';
   if(!S.active) {
     el('chatEmpty').classList.remove('hidden');
@@ -1383,6 +1398,7 @@ function setQbtns(ph) {
 // ─── FINISH ───────────────────────────────────────────
 async function finishCase() {
   if(!S.active) return; S.active=false;
+  _stopRec(true);
   addMsg('✅ Завершить консультацию и получить отчёт','user');
   await showTyping(2200);
   let data=null;
@@ -1466,7 +1482,7 @@ function showTab(btn,t) {
 
 async function abortCase() {
   if(!confirm('Прервать текущий кейс?')) return;
-  S.active=false; if(S.sid)await apiDel(S.sid); S.sid=null; clearInterval(S.tmr);
+  S.active=false; _stopRec(true); if(S.sid)await apiDel(S.sid); S.sid=null; clearInterval(S.tmr);
   addMsg('❌ Кейс прерван','sys'); setQbtns('done');
   const last=CASES[CASES.length-1]; if(last&&last.active){last.active=false;saveC();} renderCases();
 }
@@ -1506,6 +1522,53 @@ function toggleKB(c) {
   if (body && c.classList.contains('open')) {
     body.style.animation = 'wlFadeUp .22s ease-out';
   }
+}
+
+// ─── VOICE INPUT ──────────────────────────────────────
+let _recognition = null;
+let _recActive = false;
+
+(function _initVoice() {
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SR) return;
+  _recognition = new SR();
+  _recognition.lang = 'ru-RU';
+  _recognition.interimResults = true;
+  _recognition.continuous = false;
+  _recognition.onresult = (e) => {
+    const transcript = Array.from(e.results).map(r => r[0].transcript).join('');
+    const inp = el('msgInput');
+    inp.value = transcript;
+    autoResize(inp);
+  };
+  _recognition.onend = () => _stopRec(false);
+  _recognition.onerror = (e) => {
+    _stopRec(false);
+    if (e.error !== 'no-speech' && e.error !== 'aborted') showToast('Ошибка микрофона: ' + e.error);
+  };
+})();
+
+function toggleVoice() {
+  if (!_recognition) { showToast('Распознавание речи не поддерживается в этом браузере'); return; }
+  if (!S.active) { showToast('Начните кейс для голосового ввода'); return; }
+  if (_recActive) { _recognition.stop(); return; }
+  _recActive = true;
+  el('micBtn').classList.add('recording');
+  const inp = el('msgInput');
+  inp.value = '';
+  inp.placeholder = 'Говорите…';
+  autoResize(inp);
+  try { _recognition.start(); } catch { _stopRec(false); }
+}
+
+function _stopRec(abort) {
+  if (!_recActive) return;
+  _recActive = false;
+  if (abort) { try { if (_recognition) _recognition.abort(); } catch {} }
+  const mb = el('micBtn');
+  if (mb) mb.classList.remove('recording');
+  const inp = el('msgInput');
+  if (inp && !inp.disabled) inp.placeholder = 'Задайте вопрос пациенту...';
 }
 
 // ─── INIT ─────────────────────────────────────────────
