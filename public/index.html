@@ -681,19 +681,24 @@ function selectCase(id) {
 }
 
 function viewCase(c) {
-  const msgs = MSGS_STORE[c.id] || [];
+  const rawMsgs = MSGS_STORE[c.id];
+  const msgs = rawMsgs || [];
+  const hasNoHistory = rawMsgs === undefined;
   el('chatEmpty').classList.add('hidden');
   el('chatActive').classList.remove('hidden');
   el('errBanner').classList.add('hidden');
   // Шапка
   el('pAvatar').textContent = c.icon;
   el('pName').textContent = c.patientName || c.name;
-  el('pStatus').textContent = c.score!=null ? `Завершён · ${c.score}%` : 'Прерван';
+  el('pStatus').textContent = c.score!=null ? `Завершён · ${c.score}%` : (c.active ? 'Прерван (прошлая сессия)' : 'Прерван');
   // Рендерим сообщения
   const icon = c.icon;
+  const emptyNote = hasNoHistory
+    ? '<div class="mrow sys"><div class="bbl" style="opacity:.6">💾 История недоступна — кейс создан до сохранения диалогов</div></div>'
+    : (msgs.length === 0 ? '<div class="mrow sys"><div class="bbl" style="opacity:.6">Сообщения не найдены</div></div>' : '');
   el('msgs').innerHTML = `
     <div class="mrow sys"><div class="bbl">📂 История: ${esc(c.name)} · ${c.date}</div></div>
-    ${msgs.length === 0 ? '<div class="mrow sys"><div class="bbl" style="opacity:.6">История переписки не сохранена</div></div>' : ''}
+    ${emptyNote}
     ${msgs.map(m => {
       if(m.role==='user') return `<div class="mrow user"><div class="mav u">ВЫ</div><div><div class="bbl">${esc(m.txt)}</div><div class="mtime">${m.time}</div></div></div>`;
       if(m.role==='bot')  return `<div class="mrow bot"><div class="mav b">${icon}</div><div><div class="bbl">${esc(m.txt)}</div><div class="mtime">${m.time}</div></div></div>`;
@@ -701,8 +706,9 @@ function viewCase(c) {
     }).join('')}
     <div class="typing-row" id="typingRow"></div>`;
   // Кнопки — только навигация, без ввода
+  const backLabel = S.active ? '← Текущий кейс' : '← Назад';
   el('qbtns').innerHTML = `
-    <button class="qbtn fin" onclick="backToActive()">← Текущий кейс</button>
+    <button class="qbtn fin" onclick="backToActive()">${backLabel}</button>
     <button class="qbtn" onclick="openModal()">🎯 Новый кейс</button>`;
   el('msgInput').disabled = true;
   el('sendBtn').disabled = true;
@@ -755,7 +761,10 @@ function filterCases(f, btn) {
 }
 function clearHistory() {
   if(!confirm('Очистить всю историю кейсов?')) return;
-  CASES.length = 0; saveC(); renderCases(); renderStats();
+  CASES.length = 0; saveC();
+  for(const k in MSGS_STORE) delete MSGS_STORE[k];
+  saveMsgs();
+  renderCases(); renderStats();
 }
 
 // ─── MODAL ────────────────────────────────────────────
@@ -824,7 +833,6 @@ async function startCase() {
   el('ppDisease').textContent=`${d.icon} ${d.name}`;
   el('ppMode').textContent=mode==='training'?'Тренировка':'Контроль';
   el('ppQ').textContent='0'; el('ppDur').textContent='0 сек'; el('ppFill').style.width='0%';
-  el('typingAv').textContent=d.icon;
 
   el('msgs').innerHTML = `<div class="typing-row" id="typingRow">
     <div class="mav b" id="typingAv">${d.icon}</div>
