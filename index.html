@@ -289,7 +289,230 @@ html, body { height: 100%; overflow: hidden; font-family: -apple-system, BlinkMa
 .spin { display: inline-block; width: 15px; height: 15px; border: 2px solid rgba(255,255,255,.3); border-top-color: #fff; border-radius: 50%; animation: sp .7s linear infinite; }
 @keyframes sp { to{transform:rotate(360deg)} }
 
-/* ── MOBILE ── */
+/* ══════════════════════════════════════
+   ANIMATIONS & EFFECTS
+══════════════════════════════════════ */
+
+/* ── Welcome ── */
+@keyframes wlLogoFloat {
+  0%,100% { transform: translateY(0) rotate(-1.5deg); box-shadow: 0 8px 32px rgba(33,160,56,.28); }
+  50%      { transform: translateY(-10px) rotate(1.5deg); box-shadow: 0 20px 48px rgba(33,160,56,.45); }
+}
+@keyframes wlFadeUp {
+  from { opacity:0; transform: translateY(22px); }
+  to   { opacity:1; transform: translateY(0); }
+}
+@keyframes wlCardIn {
+  from { opacity:0; transform: translateY(18px) scale(.96); }
+  to   { opacity:1; transform: translateY(0) scale(1); }
+}
+@keyframes shimmerBtn {
+  0%   { background-position: -200% center; }
+  100% { background-position: 200% center; }
+}
+.wl-logo { animation: wlLogoFloat 3.6s ease-in-out infinite; }
+.wl-title { animation: wlFadeUp .55s .1s both ease-out; }
+.wl-sub   { animation: wlFadeUp .55s .22s both ease-out; }
+.wl-grid  { animation: wlFadeUp .55s .34s both ease-out; }
+.wl-card  { transition: transform .2s, box-shadow .2s; }
+.wl-card:hover { transform: translateY(-3px) scale(1.02); box-shadow: 0 8px 24px rgba(33,160,56,.14); }
+.wl-cta {
+  animation: wlFadeUp .55s .46s both ease-out;
+  background: linear-gradient(90deg, var(--green) 0%, #4CB86A 40%, var(--green) 80%);
+  background-size: 200% auto;
+}
+.wl-cta:hover { animation: shimmerBtn 1.4s linear infinite; transform: translateY(-2px) scale(1.01); }
+.wl-hint { animation: wlFadeUp .55s .6s both ease-out; }
+
+/* Floating particles on welcome */
+#wl-particles { position:absolute; inset:0; pointer-events:none; overflow:hidden; }
+.wl-dot {
+  position: absolute; border-radius: 50%; background: rgba(33,160,56,.18);
+  animation: wlDotFloat linear infinite;
+}
+@keyframes wlDotFloat {
+  0%   { transform: translateY(0) scale(1);    opacity: .15; }
+  50%  { transform: translateY(-60px) scale(1.15); opacity: .35; }
+  100% { transform: translateY(0) scale(1);    opacity: .15; }
+}
+
+/* ── Status dot pulse ── */
+@keyframes dotGlow {
+  0%,100% { box-shadow: 0 0 0 0 rgba(33,160,56,.5); }
+  50%      { box-shadow: 0 0 0 5px rgba(33,160,56,0); }
+}
+.dot { animation: dotGlow 2s ease-in-out infinite; }
+
+/* ── Progress bar shine ── */
+.prg-bar { position: relative; overflow: hidden; }
+.prg-fill::after {
+  content: '';
+  position: absolute; top: 0; left: -100%; width: 60%; height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,.55), transparent);
+  animation: progShine 2.2s ease-in-out infinite;
+}
+.prg-fill { position: relative; overflow: hidden; }
+@keyframes progShine {
+  0%   { left: -80%; }
+  100% { left: 160%; }
+}
+
+/* ── Message bubble spring ── */
+@keyframes mIn {
+  0%   { opacity:0; transform: translateY(10px) scale(.94); }
+  60%  { transform: translateY(-3px) scale(1.015); }
+  80%  { transform: translateY(1px) scale(.997); }
+  100% { opacity:1; transform: translateY(0) scale(1); }
+}
+.mrow { animation: mIn .28s cubic-bezier(.34,1.56,.64,1) both; }
+
+/* ── Avatar heartbeat when bot typing ── */
+@keyframes avatarPulse {
+  0%,100% { transform: scale(1); }
+  30%      { transform: scale(1.14); }
+  60%      { transform: scale(.96); }
+}
+.typing-row.on .mav { animation: avatarPulse 1.4s ease-in-out infinite; }
+
+/* ── Typing dots enhanced ── */
+@keyframes tp {
+  0%,60%,100% { opacity:.25; transform: scale(.8) translateY(0); }
+  30%          { opacity:1;   transform: scale(1) translateY(-4px); }
+}
+
+/* ── Send button ripple host ── */
+.sbtn, .new-btn, .wl-cta, .btn-s, .ce-btn, .qa-btn, .hbtn, .nav-btn, .bnav, .qbtn {
+  position: relative; overflow: hidden;
+}
+.ripple-fx {
+  position: absolute; border-radius: 50%;
+  background: rgba(255,255,255,.38);
+  transform: scale(0); animation: rippleFx .5s linear;
+  pointer-events: none;
+}
+.ripple-fx.dark { background: rgba(33,160,56,.22); }
+@keyframes rippleFx {
+  to { transform: scale(4); opacity: 0; }
+}
+
+/* ── New case button pulse ── */
+@keyframes newBtnGlow {
+  0%,100% { box-shadow: 0 0 0 0 rgba(33,160,56,.4); }
+  50%      { box-shadow: 0 0 0 7px rgba(33,160,56,0); }
+}
+.new-btn { animation: newBtnGlow 2.8s ease-in-out infinite; }
+
+/* ── Page transition ── */
+@keyframes pgSlideIn {
+  from { transform: translateX(6px); }
+  to   { transform: translateX(0); }
+}
+.page:not(.hidden) { animation: pgSlideIn .2s ease-out; }
+
+/* ── Stats card entrance ── */
+@keyframes scIn {
+  from { opacity:0; transform: translateY(12px) scale(.97); }
+  to   { opacity:1; transform: translateY(0) scale(1); }
+}
+.sc { animation: scIn .3s ease-out both; }
+.sc:nth-child(1) { animation-delay: .04s; }
+.sc:nth-child(2) { animation-delay: .10s; }
+.sc:nth-child(3) { animation-delay: .16s; }
+.sc:nth-child(4) { animation-delay: .22s; }
+.sc:hover { transform: translateY(-2px); box-shadow: 0 4px 18px rgba(33,160,56,.13); transition: transform .18s, box-shadow .18s; }
+
+/* History item stagger */
+@keyframes hiIn {
+  from { opacity:0; transform: translateX(-10px); }
+  to   { opacity:1; transform: translateX(0); }
+}
+.hi { animation: hiIn .28s ease-out both; }
+
+/* ── KB card stagger ── */
+@keyframes kbIn {
+  from { opacity:0; transform: translateY(10px) scale(.97); }
+  to   { opacity:1; transform: translateY(0) scale(1); }
+}
+.kb-card { animation: kbIn .3s ease-out both; }
+
+/* ── Score circle SVG ring ── */
+.sc-ring-wrap { position:relative; width:80px; height:80px; margin:0 auto 12px; display:flex; align-items:center; justify-content:center; }
+.sc-ring-svg { position:absolute; inset:0; width:100%; height:100%; transform: rotate(-90deg); }
+.sc-ring-bg  { fill:none; stroke: var(--gray-2); stroke-width:6; }
+.sc-ring-fill{ fill:none; stroke-width:6; stroke-linecap:round; transition: stroke-dashoffset .9s cubic-bezier(.34,1.1,.64,1); }
+.sc-ring-inner { position:relative; text-align:center; }
+
+/* ── Confetti ── */
+#confetti-container { position:fixed; inset:0; pointer-events:none; z-index:999; overflow:hidden; }
+.cf-piece {
+  position:absolute; top:-20px; border-radius:2px;
+  animation: cfFall linear forwards;
+}
+@keyframes cfFall {
+  0%   { transform: translateY(-20px) rotateZ(0deg) rotateX(0deg); opacity:1; }
+  100% { transform: translateY(110vh) rotateZ(720deg) rotateX(360deg); opacity:0; }
+}
+
+/* ── Case ico bounce on active ── */
+.case-row.active .case-ico {
+  animation: caseIcoBounce .35s cubic-bezier(.34,1.56,.64,1);
+}
+@keyframes caseIcoBounce {
+  from { transform: scale(.8); }
+  to   { transform: scale(1); }
+}
+
+/* ── Send button send animation ── */
+@keyframes sendPop {
+  0%   { transform: scale(1); }
+  40%  { transform: scale(.88) rotate(-8deg); }
+  70%  { transform: scale(1.12) rotate(4deg); }
+  100% { transform: scale(1) rotate(0); }
+}
+.sbtn.sending { animation: sendPop .35s cubic-bezier(.34,1.56,.64,1); }
+
+/* ── Input area focus glow ── */
+.iwrap:focus-within {
+  border-color: var(--green);
+  background: #fff;
+  box-shadow: 0 0 0 3px rgba(33,160,56,.1);
+  transition: border-color .15s, box-shadow .2s;
+}
+
+/* ── Brand icon spin on hover ── */
+@keyframes brandSpin {
+  from { transform: rotate(0); }
+  to   { transform: rotate(360deg); }
+}
+.brand-icon:hover { animation: brandSpin .5s ease-out; cursor: pointer; }
+
+/* ── Toast notification ── */
+#toast-wrap { position:fixed; bottom:80px; left:50%; transform:translateX(-50%); z-index:200; display:flex; flex-direction:column; gap:6px; align-items:center; pointer-events:none; }
+.toast {
+  background: rgba(28,28,30,.88); color:#fff; padding:8px 16px; border-radius:20px;
+  font-size:13px; font-weight:500; backdrop-filter:blur(8px);
+  animation: toastIn .25s ease-out, toastOut .3s ease-in 1.9s forwards;
+  white-space: nowrap;
+}
+@keyframes toastIn  { from{opacity:0;transform:translateY(10px) scale(.92)} to{opacity:1;transform:translateY(0) scale(1)} }
+@keyframes toastOut { from{opacity:1;transform:translateY(0) scale(1)} to{opacity:0;transform:translateY(-8px) scale(.92)} }
+
+/* ── App screen entrance ── */
+@keyframes appIn {
+  from { transform: scale(.97); filter: blur(2px); }
+  to   { transform: scale(1);   filter: blur(0); }
+}
+#app:not(.hidden) { animation: appIn .28s ease-out; }
+
+/* ── d-card select bounce ── */
+@keyframes dCardSel {
+  0%   { transform: scale(.96); }
+  60%  { transform: scale(1.04); }
+  100% { transform: scale(1); }
+}
+.d-card.sel { animation: dCardSel .25s cubic-bezier(.34,1.56,.64,1); }
+
+/* ── ── MOBILE ── */
 @media (max-width: 768px) {
   .burger { display: flex; }
   .topnav-center { display: none; }
@@ -317,8 +540,14 @@ html, body { height: 100%; overflow: hidden; font-family: -apple-system, BlinkMa
 </head>
 <body>
 
+<!-- confetti layer -->
+<div id="confetti-container"></div>
+<!-- toast layer -->
+<div id="toast-wrap"></div>
+
 <!-- ══════════ WELCOME ══════════ -->
 <div id="welcome" class="screen" style="display:flex">
+  <div id="wl-particles"></div>
   <div class="wl-logo">
     <svg viewBox="0 0 48 48" fill="none">
       <path d="M24 6C13.5 6 5 14.5 5 25s8.5 19 19 19 19-8.5 19-19" stroke="white" stroke-width="4" stroke-linecap="round"/>
@@ -521,6 +750,135 @@ html, body { height: 100%; overflow: hidden; font-family: -apple-system, BlinkMa
 </div>
 
 <script>
+// ─── ANIMATION UTILITIES ─────────────────────────────
+
+function ripple(btn, clientX, clientY) {
+  const r = document.createElement('span');
+  const rect = btn.getBoundingClientRect();
+  const size = Math.max(rect.width, rect.height) * 2;
+  const x = clientX - rect.left - size/2;
+  const y = clientY - rect.top  - size/2;
+  r.className = 'ripple-fx';
+  const bg = getComputedStyle(btn).backgroundColor;
+  if (bg.includes('255,255,255') || bg.includes('247,248') || bg === 'rgba(0, 0, 0, 0)') {
+    r.classList.add('dark');
+  }
+  r.style.cssText = `width:${size}px;height:${size}px;left:${x}px;top:${y}px`;
+  btn.appendChild(r);
+  r.addEventListener('animationend', () => r.remove());
+}
+document.addEventListener('click', e => {
+  const btn = e.target.closest('.sbtn,.new-btn,.btn-s,.ce-btn,.qa-btn,.hbtn,.nav-btn,.bnav,.qbtn,.wl-cta,.kb-card,.d-card,.m-card');
+  if (btn) ripple(btn, e.clientX, e.clientY);
+});
+
+function showToast(msg) {
+  const wrap = document.getElementById('toast-wrap');
+  const t = document.createElement('div');
+  t.className = 'toast';
+  t.textContent = msg;
+  wrap.appendChild(t);
+  setTimeout(() => t.remove(), 2300);
+}
+
+function launchConfetti(count = 90) {
+  const container = document.getElementById('confetti-container');
+  const colors = ['#21A038','#4CB86A','#FFD700','#FF6B6B','#5C9BD6','#FF9800','#E91E63','#9C27B0'];
+  for (let i = 0; i < count; i++) {
+    const cf = document.createElement('div');
+    cf.className = 'cf-piece';
+    const size = 6 + Math.random() * 8;
+    cf.style.cssText = `
+      left:${Math.random()*100}%;
+      width:${size}px; height:${size * (1 + Math.random())}px;
+      background:${colors[Math.floor(Math.random()*colors.length)]};
+      animation-duration:${1.8 + Math.random()*2.4}s;
+      animation-delay:${Math.random()*.8}s;
+      border-radius:${Math.random()>.5?'50%':'2px'};
+      opacity:${.7+Math.random()*.3};
+    `;
+    container.appendChild(cf);
+    cf.addEventListener('animationend', () => cf.remove());
+  }
+}
+
+function countUp(el, target, suffix='', duration=900) {
+  const start = performance.now();
+  const startVal = 0;
+  function tick(now) {
+    const progress = Math.min((now - start) / duration, 1);
+    const ease = 1 - Math.pow(1 - progress, 3);
+    const val = Math.round(startVal + (target - startVal) * ease);
+    el.textContent = val + suffix;
+    if (progress < 1) requestAnimationFrame(tick);
+  }
+  requestAnimationFrame(tick);
+}
+
+function animateRing(svgEl, pct, color) {
+  const r = 35;
+  const circ = 2 * Math.PI * r;
+  const offset = circ - (pct / 100) * circ;
+  svgEl.innerHTML = `
+    <circle class="sc-ring-bg"   cx="40" cy="40" r="${r}"/>
+    <circle class="sc-ring-fill" cx="40" cy="40" r="${r}"
+      stroke="${color}"
+      stroke-dasharray="${circ}"
+      stroke-dashoffset="${circ}"/>`;
+  requestAnimationFrame(() => requestAnimationFrame(() => {
+    svgEl.querySelector('.sc-ring-fill').style.strokeDashoffset = offset;
+  }));
+}
+
+function buildScoreCircle(pct, color, bgColor, label) {
+  const r = 35, circ = 2 * Math.PI * r;
+  const offset = circ - (pct / 100) * circ;
+  return `<div class="sc-ring-wrap">
+    <svg class="sc-ring-svg" viewBox="0 0 80 80">
+      <circle class="sc-ring-bg"   cx="40" cy="40" r="${r}"/>
+      <circle class="sc-ring-fill" cx="40" cy="40" r="${r}"
+        stroke="${color}" stroke-dasharray="${circ}" stroke-dashoffset="${circ}"
+        style="transition:stroke-dashoffset .9s cubic-bezier(.34,1.1,.64,1)"/>
+    </svg>
+    <div class="sc-ring-inner">
+      <div class="sc-n" style="color:${color};font-size:17px" data-target="${pct}" data-suffix="%">0%</div>
+      <div class="sc-l">${label}</div>
+    </div>
+  </div>`;
+}
+
+function activateRings(container) {
+  const r = 35, circ = 2 * Math.PI * r;
+  container.querySelectorAll('.sc-ring-fill').forEach(ring => {
+    const numEl = ring.closest('.sc-ring-wrap')?.querySelector('.sc-n');
+    const target = numEl ? parseInt(numEl.dataset.target) : 0;
+    const offset = circ - (target / 100) * circ;
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+      ring.style.strokeDashoffset = offset;
+      if (numEl) countUp(numEl, target, '%', 900);
+    }));
+  });
+}
+
+// Particles on welcome screen
+function initParticles() {
+  const wrap = document.getElementById('wl-particles');
+  if (!wrap) return;
+  for (let i = 0; i < 18; i++) {
+    const d = document.createElement('div');
+    d.className = 'wl-dot';
+    const size = 6 + Math.random() * 22;
+    d.style.cssText = `
+      width:${size}px; height:${size}px;
+      left:${Math.random()*100}%; top:${20+Math.random()*75}%;
+      animation-duration:${3+Math.random()*5}s;
+      animation-delay:${Math.random()*4}s;
+    `;
+    wrap.appendChild(d);
+  }
+}
+initParticles();
+
 // ─── CONFIG ───────────────────────────────────────────
 // Если сервер проксирует /api -> бэку, шлём на /api (относительно себя).
 // Если API_URL пустой — демо-режим с mock-ответами.
@@ -681,19 +1039,24 @@ function selectCase(id) {
 }
 
 function viewCase(c) {
-  const msgs = MSGS_STORE[c.id] || [];
+  const rawMsgs = MSGS_STORE[c.id];
+  const msgs = rawMsgs || [];
+  const hasNoHistory = rawMsgs === undefined;
   el('chatEmpty').classList.add('hidden');
   el('chatActive').classList.remove('hidden');
   el('errBanner').classList.add('hidden');
   // Шапка
   el('pAvatar').textContent = c.icon;
   el('pName').textContent = c.patientName || c.name;
-  el('pStatus').textContent = c.score!=null ? `Завершён · ${c.score}%` : 'Прерван';
+  el('pStatus').textContent = c.score!=null ? `Завершён · ${c.score}%` : (c.active ? 'Прерван (прошлая сессия)' : 'Прерван');
   // Рендерим сообщения
   const icon = c.icon;
+  const emptyNote = hasNoHistory
+    ? '<div class="mrow sys"><div class="bbl" style="opacity:.6">💾 История недоступна — кейс создан до сохранения диалогов</div></div>'
+    : (msgs.length === 0 ? '<div class="mrow sys"><div class="bbl" style="opacity:.6">Сообщения не найдены</div></div>' : '');
   el('msgs').innerHTML = `
     <div class="mrow sys"><div class="bbl">📂 История: ${esc(c.name)} · ${c.date}</div></div>
-    ${msgs.length === 0 ? '<div class="mrow sys"><div class="bbl" style="opacity:.6">История переписки не сохранена</div></div>' : ''}
+    ${emptyNote}
     ${msgs.map(m => {
       if(m.role==='user') return `<div class="mrow user"><div class="mav u">ВЫ</div><div><div class="bbl">${esc(m.txt)}</div><div class="mtime">${m.time}</div></div></div>`;
       if(m.role==='bot')  return `<div class="mrow bot"><div class="mav b">${icon}</div><div><div class="bbl">${esc(m.txt)}</div><div class="mtime">${m.time}</div></div></div>`;
@@ -701,8 +1064,9 @@ function viewCase(c) {
     }).join('')}
     <div class="typing-row" id="typingRow"></div>`;
   // Кнопки — только навигация, без ввода
+  const backLabel = S.active ? '← Текущий кейс' : '← Назад';
   el('qbtns').innerHTML = `
-    <button class="qbtn fin" onclick="backToActive()">← Текущий кейс</button>
+    <button class="qbtn fin" onclick="backToActive()">${backLabel}</button>
     <button class="qbtn" onclick="openModal()">🎯 Новый кейс</button>`;
   el('msgInput').disabled = true;
   el('sendBtn').disabled = true;
@@ -755,7 +1119,10 @@ function filterCases(f, btn) {
 }
 function clearHistory() {
   if(!confirm('Очистить всю историю кейсов?')) return;
-  CASES.length = 0; saveC(); renderCases(); renderStats();
+  CASES.length = 0; saveC();
+  for(const k in MSGS_STORE) delete MSGS_STORE[k];
+  saveMsgs();
+  renderCases(); renderStats();
 }
 
 // ─── MODAL ────────────────────────────────────────────
@@ -824,7 +1191,6 @@ async function startCase() {
   el('ppDisease').textContent=`${d.icon} ${d.name}`;
   el('ppMode').textContent=mode==='training'?'Тренировка':'Контроль';
   el('ppQ').textContent='0'; el('ppDur').textContent='0 сек'; el('ppFill').style.width='0%';
-  el('typingAv').textContent=d.icon;
 
   el('msgs').innerHTML = `<div class="typing-row" id="typingRow">
     <div class="mav b" id="typingAv">${d.icon}</div>
@@ -850,6 +1216,10 @@ async function sendMsg() {
   const txt = inp.value.trim();
   if(!txt||!S.active) return;
   inp.value=''; inp.style.height=''; el('sendBtn').disabled=true;
+  // Send button pop animation
+  const sb = el('sendBtn');
+  sb.classList.add('sending');
+  sb.addEventListener('animationend', () => sb.classList.remove('sending'), { once: true });
   addMsg(txt,'user'); updateProg(txt);
   showTyping(0);
   let reply;
@@ -1043,30 +1413,45 @@ async function finishCase() {
   const langErrors  = data?.language_quality?.errors  || [];
 
   hideTyping();
-  addMsg(`<div class="rep-card">
+  const repId = 'rep_' + Date.now();
+  addMsg(`<div class="rep-card" id="${repId}">
     <div class="rep-tabs">
       <button class="rep-tab active" onclick="showTab(this,'a')">📋 Анамнез</button>
       <button class="rep-tab" onclick="showTab(this,'l')">📝 Язык</button>
       <button class="rep-tab" onclick="showTab(this,'t')">🏆 Итог</button>
     </div>
     <div class="rep-body" id="ra">
-      <div style="text-align:center;margin-bottom:12px"><div class="sc-circle" style="background:${sb};border:3px solid ${sbo}"><div class="sc-n" style="color:${sc}">${pct}%</div><div class="sc-l">охват</div></div></div>
-      ${attrs.map(a=>`<div class="arow"><span>${esc(a.n)}</span><span class="${a.ok?'ok':'no'}">${a.ok?'✓':'✗'}</span></div>`).join('')}
+      ${buildScoreCircle(pct, sc, sb, 'охват')}
+      ${attrs.map(a=>`<div class="arow" style="animation:hiIn .25s ease-out both"><span>${esc(a.n)}</span><span class="${a.ok?'ok':'no'}">${a.ok?'✓':'✗'}</span></div>`).join('')}
     </div>
     <div class="rep-body" id="rl" style="display:none">
-      <div style="text-align:center;margin-bottom:12px"><div class="sc-circle" style="background:#E3F2FD;border:3px solid #1976D2"><div class="sc-n" style="color:#1565C0">${lang}%</div><div class="sc-l">язык</div></div></div>
+      ${buildScoreCircle(lang, '#1565C0', '#E3F2FD', 'язык')}
       <div style="font-size:13px;color:var(--gray-t);margin-bottom:8px">${esc(langComment)}</div>
       ${langErrors.length ? `<div style="font-size:13px;padding:8px;background:var(--gray);border-radius:8px">${langErrors.map(e=>`💡 ${esc(e)}`).join('<br>')}</div>` : ''}
     </div>
     <div class="rep-body" id="rt" style="display:none">
-      <div style="text-align:center;margin-bottom:12px"><div class="sc-circle" style="background:${sb};border:3px solid ${sbo}"><div class="sc-n" style="color:${sc}">${total}%</div><div class="sc-l">итог</div></div></div>
+      ${buildScoreCircle(total, sc, sb, 'итог')}
       <div class="arow"><span>Охват анамнеза (70%)</span><span style="font-weight:600">${pct}%</span></div>
       <div class="arow"><span>Качество языка (30%)</span><span style="font-weight:600">${lang}%</span></div>
       <div style="margin-top:10px;padding:10px;background:${sb};border-radius:10px;font-size:13px;color:${sc}">
-        ${total>=80?'✅ Отлично! Продолжайте в том же духе.':total>=60?'👍 Неплохо! Уточняйте анамнез подробнее.':'📚 Нужно больше практики. Задавайте больше вопросов.'}
+        ${total>=80?'🏆 Отлично! Так держать!':total>=60?'👍 Неплохо! Уточняйте анамнез подробнее.':'📚 Нужно больше практики. Задавайте больше вопросов.'}
       </div>
     </div>
   </div>`,'html');
+  // Запускаем кольца на активной вкладке
+  setTimeout(() => {
+    const repEl = document.getElementById(repId);
+    if (repEl) activateRings(repEl.querySelector('#ra'));
+  }, 80);
+  // Конфетти при хорошем результате
+  if (total >= 80) {
+    setTimeout(() => {
+      launchConfetti(120);
+      showToast(`🏆 Отличный результат — ${total}%!`);
+    }, 400);
+  } else if (total >= 60) {
+    showToast(`👍 Кейс завершён — ${total}%`);
+  }
   const last=CASES[CASES.length-1]; if(last){last.score=total;last.active=false;saveC();}
   setQbtns('done'); clearInterval(S.tmr); renderCases();
 }
@@ -1075,7 +1460,8 @@ function showTab(btn,t) {
   const card=btn.closest('.rep-card');
   card.querySelectorAll('.rep-tab').forEach(b=>b.classList.remove('active')); btn.classList.add('active');
   ['ra','rl','rt'].forEach(id=>{const e=card.querySelector('#'+id);if(e)e.style.display='none';});
-  const m={a:'ra',l:'rl',t:'rt'}; const target=card.querySelector('#'+m[t]); if(target)target.style.display='block';
+  const m={a:'ra',l:'rl',t:'rt'}; const target=card.querySelector('#'+m[t]);
+  if(target){ target.style.display='block'; activateRings(target); }
 }
 
 async function abortCase() {
@@ -1088,28 +1474,39 @@ async function abortCase() {
 // ─── STATS ────────────────────────────────────────────
 function renderStats() {
   const done=CASES.filter(c=>c.score!=null), sc=done.map(c=>c.score);
-  el('stTotal').textContent=CASES.length;
-  el('stAvg').textContent=sc.length?Math.round(sc.reduce((a,b)=>a+b,0)/sc.length)+'%':'—';
-  el('stBest').textContent=sc.length?Math.max(...sc)+'%':'—';
-  el('stDone').textContent=done.length;
+  const avg = sc.length ? Math.round(sc.reduce((a,b)=>a+b,0)/sc.length) : null;
+  const best = sc.length ? Math.max(...sc) : null;
+  // Animated count-up for numbers
+  const tTotal = el('stTotal'); countUp(tTotal, CASES.length, '', 600);
+  const tDone  = el('stDone');  countUp(tDone, done.length, '', 600);
+  if(avg  != null) { el('stAvg').textContent='0%';  setTimeout(()=>countUp(el('stAvg'), avg, '%', 800), 120); }
+  else el('stAvg').textContent='—';
+  if(best != null) { el('stBest').textContent='0%'; setTimeout(()=>countUp(el('stBest'), best, '%', 800), 200); }
+  else el('stBest').textContent='—';
   const lst=el('histList');
   if(!done.length){lst.innerHTML='<div class="no-hist"><div class="no-hist-icon">📋</div><div>Нет завершённых кейсов.<br>Начните тренировку!</div></div>';return;}
-  lst.innerHTML=done.slice().reverse().map(c=>{
+  lst.innerHTML=done.slice().reverse().map((c,i)=>{
     const cls=c.score>=80?'sg-good':c.score>=60?'sg-mid':'sg-low';
-    return `<div class="hi"><div class="hi-icon">${c.icon}</div><div class="hi-inf"><div class="hi-name">${esc(c.name)}</div><div class="hi-meta">${c.date} · ${c.mode==='training'?'Тренировка':'Контроль'}</div></div><div class="hi-sc ${cls}">${c.score}%</div></div>`;
+    return `<div class="hi" style="animation-delay:${i*55}ms"><div class="hi-icon">${c.icon}</div><div class="hi-inf"><div class="hi-name">${esc(c.name)}</div><div class="hi-meta">${c.date} · ${c.mode==='training'?'Тренировка':'Контроль'}</div></div><div class="hi-sc ${cls}">${c.score}%</div></div>`;
   }).join('');
 }
 
 // ─── KB ───────────────────────────────────────────────
 function renderKB() {
-  el('kbGrid').innerHTML=DISEASES.map(d=>`
-    <div class="kb-card" onclick="toggleKB(this)">
+  el('kbGrid').innerHTML=DISEASES.map((d,i)=>`
+    <div class="kb-card" style="animation-delay:${i*60}ms" onclick="toggleKB(this)">
       <div class="kb-hdr"><div class="kb-icon">${d.icon}</div><div><div class="kb-n">${d.name}</div><div class="kb-c">${d.desc}</div></div><span class="kb-arrow">▼</span></div>
       <div class="kb-tags">${d.syms.map(s=>`<span class="kb-tag">${s}</span>`).join('')}</div>
       ${d.kb?`<div class="kb-body">${esc(d.kb)}</div>`:''}
     </div>`).join('');
 }
-function toggleKB(c) { c.classList.toggle('open'); }
+function toggleKB(c) {
+  c.classList.toggle('open');
+  const body = c.querySelector('.kb-body');
+  if (body && c.classList.contains('open')) {
+    body.style.animation = 'wlFadeUp .22s ease-out';
+  }
+}
 
 // ─── INIT ─────────────────────────────────────────────
 renderKB();
