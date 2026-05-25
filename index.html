@@ -743,9 +743,14 @@ html, body { height: 100%; overflow: hidden; font-family: -apple-system, BlinkMa
   <div class="modal">
     <div class="mhandle"></div>
     <div class="m-title">Новый кейс</div>
-    <div class="m-sub">Выберите заболевание и режим</div>
-    <div class="m-lbl">Заболевание</div>
-    <div class="d-grid" id="dGrid"></div>
+    <div class="m-sub" id="modalSub">Выберите заболевание и режим</div>
+    <div id="diseaseSection">
+      <div class="m-lbl">Заболевание</div>
+      <div class="d-grid" id="dGrid"></div>
+    </div>
+    <div id="controlNote" style="display:none;padding:14px 12px;background:var(--gray);border-radius:var(--r-md);margin-bottom:16px;font-size:13px;color:var(--gray-t);text-align:center;line-height:1.5">
+      🎲 Заболевание выбирается случайно.<br>Ваша задача — поставить диагноз самостоятельно по жалобам пациента.
+    </div>
     <div class="m-lbl">Режим обучения</div>
     <div class="mode-row">
       <div class="m-card sel" data-mode="training" onclick="selMode(this)">
@@ -1035,15 +1040,20 @@ function renderCases(f='all') {
   const lst = el('caseList');
   let cc = f==='all' ? CASES : CASES.filter(c=>c.mode===f);
   if(!cc.length) { lst.innerHTML='<div class="sb-empty">Нет кейсов.<br>Нажмите «Новый кейс»</div>'; return; }
-  lst.innerHTML = cc.slice().reverse().map(c=>`
+  lst.innerHTML = cc.slice().reverse().map(c=>{
+    const hiddenControl = c.mode==='control' && c.score==null && c.active;
+    const displayName = hiddenControl ? '❓ Контрольный кейс' : esc(c.name);
+    const displayIcon = hiddenControl ? '❓' : c.icon;
+    return `
     <div class="case-row ${c.id===S.currentCaseId?'active':''}" data-t="${c.mode}" onclick="selectCase(${c.id})" style="cursor:pointer">
-      <div class="case-ico">${c.icon}</div>
+      <div class="case-ico">${displayIcon}</div>
       <div class="case-inf">
-        <div class="case-name">${esc(c.name)}</div>
+        <div class="case-name">${displayName}</div>
         <div class="case-meta">${c.date}${c.score!=null?' · <b>'+c.score+'%</b>':c.active?' · в процессе':''}</div>
       </div>
       <span class="case-badge ${c.mode==='training'?'bt':'bc'}">${c.mode==='training'?'Тренировка':'Контроль'}</span>
-    </div>`).join('');
+    </div>`;
+  }).join('');
 }
 
 function selectCase(id) {
@@ -1107,7 +1117,9 @@ function backToActive() {
   }
   // Восстанавливаем активный чат
   el('pName').textContent = S.patientName || S.disease?.patient || '';
-  el('pStatus').textContent = `Ожидает вопроса · ${S.disease?.name||''}`;
+  el('pStatus').textContent = S.mode === 'control'
+    ? 'Ожидает вопроса · Диагноз неизвестен'
+    : `Ожидает вопроса · ${S.disease?.name||''}`;
   // Перерисовываем сообщения активной сессии из MSGS_STORE
   const msgs = MSGS_STORE[S.currentCaseId] || [];
   const icon = S.disease?.icon || '🧑';
@@ -1159,20 +1171,41 @@ function openModal() {
     <div class="d-card ${i===0?'sel':''}" data-key="${d.key}" onclick="selD(this)">
       <div class="d-icon">${d.icon}</div><div class="d-name">${d.name}</div><div class="d-desc">${d.desc}</div>
     </div>`).join('');
+  // Сбрасываем на тренировку при каждом открытии
+  document.querySelectorAll('.m-card').forEach(c=>c.classList.remove('sel'));
+  document.querySelector('.m-card[data-mode="training"]').classList.add('sel');
+  el('diseaseSection').style.display = '';
+  el('controlNote').style.display = 'none';
+  el('modalSub').textContent = 'Выберите заболевание и режим';
   el('overlay').classList.add('on'); closeSB();
 }
 function closeModal() { el('overlay').classList.remove('on'); }
 function overlayClick(e) { if(e.target===el('overlay')) closeModal(); }
 function selD(el2) { document.querySelectorAll('.d-card').forEach(c=>c.classList.remove('sel')); el2.classList.add('sel'); }
-function selMode(el2) { document.querySelectorAll('.m-card').forEach(c=>c.classList.remove('sel')); el2.classList.add('sel'); }
+function selMode(el2) {
+  document.querySelectorAll('.m-card').forEach(c=>c.classList.remove('sel'));
+  el2.classList.add('sel');
+  const isControl = el2.dataset.mode === 'control';
+  el('diseaseSection').style.display = isControl ? 'none' : '';
+  el('controlNote').style.display   = isControl ? 'block' : 'none';
+  el('modalSub').textContent = isControl
+    ? 'Режим контроля — болезнь неизвестна заранее'
+    : 'Выберите заболевание и режим';
+}
 
 // ─── START CASE ───────────────────────────────────────
 async function startCase() {
-  const dEl = document.querySelector('.d-card.sel');
   const mEl = document.querySelector('.m-card.sel');
-  if(!dEl||!mEl) return;
-  const dkey = dEl.dataset.key;
+  if(!mEl) return;
   const mode = mEl.dataset.mode;
+  let dkey;
+  if (mode === 'control') {
+    dkey = DISEASES[Math.floor(Math.random() * DISEASES.length)].key;
+  } else {
+    const dEl = document.querySelector('.d-card.sel');
+    if(!dEl) return;
+    dkey = dEl.dataset.key;
+  }
   const d = DM[dkey] || DISEASES[0];
 
   const btn = el('startBtn');
@@ -1212,12 +1245,13 @@ async function startCase() {
   // UI
   el('chatEmpty').classList.add('hidden');
   const ca = el('chatActive'); ca.classList.remove('hidden');
+  const isControl = mode === 'control';
   el('pAvatar').textContent=d.icon; el('pName').textContent=patientName;
-  el('pStatus').textContent=`Ожидает вопроса · ${d.name}`;
+  el('pStatus').textContent=isControl ? 'Ожидает вопроса · Диагноз неизвестен' : `Ожидает вопроса · ${d.name}`;
   el('ppAv').textContent=d.icon; el('ppName').textContent=patientName;
   el('ppMeta').textContent=patientAge?`${patientAge} лет · ${patientGender}`:'—';
-  el('ppDisease').textContent=`${d.icon} ${d.name}`;
-  el('ppMode').textContent=mode==='training'?'Тренировка':'Контроль';
+  el('ppDisease').textContent=isControl ? '❓ Поставьте диагноз' : `${d.icon} ${d.name}`;
+  el('ppMode').textContent=isControl?'Контроль':'Тренировка';
   el('ppQ').textContent='0'; el('ppDur').textContent='0 сек'; el('ppFill').style.width='0%';
 
   el('msgs').innerHTML = `<div class="typing-row" id="typingRow">
