@@ -1117,15 +1117,28 @@ function viewCase(c) {
     <div class="typing-row" id="typingRow"></div>`;
   // Кнопки — только навигация, без ввода
   const backLabel = S.active ? '← Текущий кейс' : '← Назад';
+  const isOrphan = c.active && c.id !== S.currentCaseId;
   el('qbtns').innerHTML = `
     <button class="qbtn fin" onclick="backToActive()">${backLabel}</button>
-    <button class="qbtn" onclick="openModal()">🎯 Новый кейс</button>`;
+    ${isOrphan
+      ? `<button class="qbtn" style="background:#c0392b;border-color:#c0392b;color:#fff" onclick="abortOrphan(${c.id})">🗑 Прервать сессию</button>`
+      : `<button class="qbtn" onclick="openModal()">🎯 Новый кейс</button>`}`;
   _stopRec(true);
   el('msgInput').disabled = true;
   el('sendBtn').disabled = true;
   el('micBtn').disabled = true;
   el('msgInput').placeholder = 'Режим просмотра истории';
   scrollB();
+}
+
+async function abortOrphan(id) {
+  const c = CASES.find(x=>x.id===id);
+  if(!c) return;
+  if(!confirm('Прервать эту сессию? Это освободит бэкенд для нового кейса.')) return;
+  if(c.sid) await apiDel(c.sid);
+  c.active = false; saveC(); renderCases();
+  showToast('Сессия прервана — теперь можно начать новый кейс');
+  viewCase(c);
 }
 
 function backToActive() {
@@ -1256,9 +1269,15 @@ async function startCase() {
       S.apiOk = true; el('errBanner').classList.add('hidden');
     } catch(e) {
       if(e.status === 409) {
-        // Старая сессия ещё не закрыта на бэке — предлагаем подождать
         btn.innerHTML = 'Начать кейс →'; btn.disabled=false;
-        showToast(e.detail || 'Предыдущая сессия ещё активна — подождите секунду и попробуйте снова.');
+        closeModal();
+        const orphan = CASES.find(x => x.active && x.id !== S.currentCaseId);
+        if(orphan) {
+          selectCase(orphan.id);
+          showToast('Активная сессия найдена — нажмите «Прервать сессию» чтобы освободить место для нового кейса');
+        } else {
+          showToast(e.detail || 'Предыдущая сессия ещё активна — подождите секунду и попробуйте снова.');
+        }
         return;
       }
       console.error('apiStart failed:', e); S.apiOk=false; el('errBanner').classList.remove('hidden');
@@ -1299,7 +1318,7 @@ async function startCase() {
 
   setQbtns('start');
 
-  const entry = { id:Date.now(), key:dkey, name:d.name, icon:d.icon, patientIcon:dispIcon, mode, date:new Date().toLocaleDateString('ru',{day:'numeric',month:'short'}), active:true, score:null, patientName };
+  const entry = { id:Date.now(), key:dkey, name:d.name, icon:d.icon, patientIcon:dispIcon, mode, date:new Date().toLocaleDateString('ru',{day:'numeric',month:'short'}), active:true, score:null, patientName, sid: sid || null };
   S.currentCaseId = entry.id;
   MSGS_STORE[entry.id] = [];
   CASES.push(entry); saveC(); renderCases();
