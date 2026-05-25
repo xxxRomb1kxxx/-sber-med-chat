@@ -935,7 +935,7 @@ const DISEASES = [
 const DM = Object.fromEntries(DISEASES.map(d=>[d.key,d]));
 
 // ─── STATE ────────────────────────────────────────────
-const S = { sid:null, active:false, disease:null, mode:null, qCount:0, t0:null, tmr:null, apiOk:true, patientName:null, lastBotMsgs:[], currentCaseId:null };
+const S = { sid:null, active:false, disease:null, mode:null, qCount:0, t0:null, tmr:null, apiOk:true, patientName:null, lastBotMsgs:[], currentCaseId:null, displayIcon:null };
 const CASES = (() => { try { return JSON.parse(localStorage.getItem('smii_cases')||'[]'); } catch { return []; } })();
 const saveC = () => { try { localStorage.setItem('smii_cases', JSON.stringify(CASES)); } catch { showToast('⚠️ Данные не сохранены: память браузера заполнена'); } };
 // Хранилище сообщений: { caseId: [{role, txt, time}] }
@@ -1008,6 +1008,11 @@ async function apiDel(sid) { try { await fetch(`${BASE()}/cases/${sid}`, {method
 
 // ─── HELPERS ──────────────────────────────────────────
 const sleep = ms => new Promise(r=>setTimeout(r,ms));
+function patientEmoji(age, gender) {
+  const female = (gender || '').startsWith('Ж') || (gender || '') === 'Женщина';
+  if (female) return (age || 30) <= 25 ? '👧' : (age || 30) <= 60 ? '👩' : '👵';
+  return (age || 30) <= 25 ? '👦' : (age || 30) <= 60 ? '👨' : '👴';
+}
 const esc = t => String(t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 const nowT = () => new Date().toLocaleTimeString('ru',{hour:'2-digit',minute:'2-digit'});
 const scrollB = () => { const m=document.getElementById('msgs'); requestAnimationFrame(()=>m.scrollTop=m.scrollHeight); };
@@ -1049,7 +1054,7 @@ function renderCases(f='all') {
   lst.innerHTML = cc.slice().reverse().map(c=>{
     const hiddenControl = c.mode==='control' && c.score==null && c.active;
     const displayName = hiddenControl ? '❓ Контрольный кейс' : esc(c.name);
-    const displayIcon = hiddenControl ? '❓' : c.icon;
+    const displayIcon = hiddenControl ? (c.patientIcon || '👤') : (c.patientIcon || c.icon);
     return `
     <div class="case-row ${c.id===S.currentCaseId?'active':''}" data-t="${c.mode}" onclick="selectCase(${c.id})" style="cursor:pointer">
       <div class="case-ico">${displayIcon}</div>
@@ -1081,11 +1086,12 @@ function viewCase(c) {
   el('chatActive').classList.remove('hidden');
   el('errBanner').classList.add('hidden');
   // Шапка
-  el('pAvatar').textContent = c.icon;
+  const viewIcon = c.patientIcon || c.icon;
+  el('pAvatar').textContent = viewIcon;
   el('pName').textContent = c.patientName || c.name;
   el('pStatus').textContent = c.score!=null ? `Завершён · ${c.score}%` : (c.active ? 'Прерван (прошлая сессия)' : 'Прерван');
   // Рендерим сообщения
-  const icon = c.icon;
+  const icon = viewIcon;
   const emptyNote = hasNoHistory
     ? '<div class="mrow sys"><div class="bbl" style="opacity:.6">💾 История недоступна — кейс создан до сохранения диалогов</div></div>'
     : (msgs.length === 0 ? '<div class="mrow sys"><div class="bbl" style="opacity:.6">Сообщения не найдены</div></div>' : '');
@@ -1128,7 +1134,7 @@ function backToActive() {
     : `Ожидает вопроса · ${S.disease?.name||''}`;
   // Перерисовываем сообщения активной сессии из MSGS_STORE
   const msgs = MSGS_STORE[S.currentCaseId] || [];
-  const icon = S.disease?.icon || '🧑';
+  const icon = S.displayIcon || S.disease?.icon || '🧑';
   el('msgs').innerHTML = `
     ${msgs.map(m => {
       if(m.role==='user') return `<div class="mrow user"><div class="mav u">ВЫ</div><div><div class="bbl">${esc(m.txt)}</div><div class="mtime">${m.time}</div></div></div>`;
@@ -1241,6 +1247,7 @@ async function startCase() {
   el('msgInput').placeholder = 'Задайте вопрос пациенту...';
 
   S.sid=sid; S.active=true; S.disease=d; S.mode=mode; S.qCount=0; S.t0=Date.now(); mockIdx=0;
+  S.displayIcon = mode === 'control' ? patientEmoji(patientAge, patientGender) : d.icon;
   clearInterval(S.tmr);
   S.tmr = setInterval(()=>{
     const sec = Math.floor((Date.now()-S.t0)/1000);
@@ -1252,22 +1259,23 @@ async function startCase() {
   el('chatEmpty').classList.add('hidden');
   const ca = el('chatActive'); ca.classList.remove('hidden');
   const isControl = mode === 'control';
-  el('pAvatar').textContent=d.icon; el('pName').textContent=patientName;
+  const dispIcon = S.displayIcon;
+  el('pAvatar').textContent=dispIcon; el('pName').textContent=patientName;
   el('pStatus').textContent=isControl ? 'Ожидает вопроса · Диагноз неизвестен' : `Ожидает вопроса · ${d.name}`;
-  el('ppAv').textContent=d.icon; el('ppName').textContent=patientName;
+  el('ppAv').textContent=dispIcon; el('ppName').textContent=patientName;
   el('ppMeta').textContent=patientAge?`${patientAge} лет · ${patientGender}`:'—';
   el('ppDisease').textContent=isControl ? '❓ Поставьте диагноз' : `${d.icon} ${d.name}`;
   el('ppMode').textContent=isControl?'Контроль':'Тренировка';
   el('ppQ').textContent='0'; el('ppDur').textContent='0 сек'; el('ppFill').style.width='0%';
 
   el('msgs').innerHTML = `<div class="typing-row" id="typingRow">
-    <div class="mav b" id="typingAv">${d.icon}</div>
+    <div class="mav b" id="typingAv">${dispIcon}</div>
     <div class="typing-bbl"><div class="tdot"></div><div class="tdot"></div><div class="tdot"></div></div>
   </div>`;
 
   setQbtns('start');
 
-  const entry = { id:Date.now(), key:dkey, name:d.name, icon:d.icon, mode, date:new Date().toLocaleDateString('ru',{day:'numeric',month:'short'}), active:true, score:null, patientName };
+  const entry = { id:Date.now(), key:dkey, name:d.name, icon:d.icon, patientIcon:dispIcon, mode, date:new Date().toLocaleDateString('ru',{day:'numeric',month:'short'}), active:true, score:null, patientName };
   S.currentCaseId = entry.id;
   MSGS_STORE[entry.id] = [];
   CASES.push(entry); saveC(); renderCases();
@@ -1424,7 +1432,7 @@ function addMsg(txt, role) {
   const msgs=el('msgs'), tr=el('typingRow'), t=nowT();
   let html='';
   if(role==='user') html=`<div class="mrow user"><div class="mav u">ВЫ</div><div><div class="bbl">${esc(txt)}</div><div class="mtime">${t} <span class="tick">✓</span></div></div></div>`;
-  else if(role==='bot') html=`<div class="mrow bot"><div class="mav b">${S.disease?S.disease.icon:'🧑'}</div><div><div class="bbl">${esc(txt)}</div><div class="mtime">${t}</div></div></div>`;
+  else if(role==='bot') html=`<div class="mrow bot"><div class="mav b">${S.displayIcon||S.disease?.icon||'🧑'}</div><div><div class="bbl">${esc(txt)}</div><div class="mtime">${t}</div></div></div>`;
   else if(role==='sys') html=`<div class="mrow sys"><div class="bbl">${esc(txt)}</div></div>`;
   else if(role==='html') html=`<div class="mrow bot" style="max-width:92%"><div class="mav b">🏥</div><div>${txt}</div></div>`;
   const d=document.createElement('div'); d.innerHTML=html;
@@ -1564,7 +1572,7 @@ function renderStats() {
   if(!done.length){lst.innerHTML='<div class="no-hist"><div class="no-hist-icon">📋</div><div>Нет завершённых кейсов.<br>Начните тренировку!</div></div>';return;}
   lst.innerHTML=done.slice().reverse().map((c,i)=>{
     const cls=c.score>=80?'sg-good':c.score>=60?'sg-mid':'sg-low';
-    return `<div class="hi" style="animation-delay:${i*55}ms"><div class="hi-icon">${c.icon}</div><div class="hi-inf"><div class="hi-name">${esc(c.name)}</div><div class="hi-meta">${c.date} · ${c.mode==='training'?'Тренировка':'Контроль'}</div></div><div class="hi-sc ${cls}">${c.score}%</div></div>`;
+    return `<div class="hi" style="animation-delay:${i*55}ms"><div class="hi-icon">${c.patientIcon||c.icon}</div><div class="hi-inf"><div class="hi-name">${esc(c.name)}</div><div class="hi-meta">${c.date} · ${c.mode==='training'?'Тренировка':'Контроль'}</div></div><div class="hi-sc ${cls}">${c.score}%</div></div>`;
   }).join('');
 }
 
