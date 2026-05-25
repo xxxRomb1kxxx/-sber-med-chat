@@ -82,6 +82,8 @@ html, body { height: 100%; overflow: hidden; font-family: -apple-system, BlinkMa
 }
 .sidebar-overlay { position: absolute; inset: 0; background: rgba(0,0,0,.4); z-index: 19; display: none; }
 .sidebar-overlay.on { display: block; }
+.pp-overlay { position: absolute; inset: 0; background: rgba(0,0,0,.4); z-index: 17; display: none; }
+.pp-overlay.on { display: block; }
 .sb-head { padding: 12px 14px 10px; border-bottom: 1px solid var(--border); }
 .sb-title { font-size: 15px; font-weight: 600; margin-bottom: 8px; }
 .sb-tabs { display: flex; background: var(--gray); border-radius: var(--r-md); padding: 3px; gap: 3px; }
@@ -598,6 +600,7 @@ html, body { height: 100%; overflow: hidden; font-family: -apple-system, BlinkMa
 
   <div class="app-body">
     <div class="sidebar-overlay" id="sbOverlay" onclick="closeSB()"></div>
+    <div class="pp-overlay" id="ppOverlay" onclick="closePP()"></div>
 
     <!-- SIDEBAR -->
     <aside class="sidebar" id="sidebar">
@@ -929,10 +932,10 @@ const DM = Object.fromEntries(DISEASES.map(d=>[d.key,d]));
 // ─── STATE ────────────────────────────────────────────
 const S = { sid:null, active:false, disease:null, mode:null, qCount:0, t0:null, tmr:null, apiOk:true, patientName:null, lastBotMsgs:[], currentCaseId:null };
 const CASES = (() => { try { return JSON.parse(localStorage.getItem('smii_cases')||'[]'); } catch { return []; } })();
-const saveC = () => localStorage.setItem('smii_cases', JSON.stringify(CASES));
+const saveC = () => { try { localStorage.setItem('smii_cases', JSON.stringify(CASES)); } catch { showToast('⚠️ Данные не сохранены: память браузера заполнена'); } };
 // Хранилище сообщений: { caseId: [{role, txt, time}] }
 const MSGS_STORE = (() => { try { return JSON.parse(localStorage.getItem('smii_msgs')||'{}'); } catch { return {}; } })();
-const saveMsgs = () => localStorage.setItem('smii_msgs', JSON.stringify(MSGS_STORE));
+const saveMsgs = () => { try { localStorage.setItem('smii_msgs', JSON.stringify(MSGS_STORE)); } catch { showToast('⚠️ История не сохранена: память браузера заполнена'); } };
 let uid = localStorage.getItem('smii_uid') || ('u'+Math.random().toString(36).slice(2,8));
 localStorage.setItem('smii_uid', uid);
 let mockIdx = 0;
@@ -973,7 +976,7 @@ async function apiMsg(sid, text) {
   return d.patient_reply || d.reply || d.text;
 }
 async function poll(sid, mid) {
-  for(let i=0;i<150;i++) {
+  for(let i=0;i<30;i++) {
     await sleep(500);
     try {
       const r = await fetch(`${BASE()}/cases/${sid}/messages/${mid}`);
@@ -1021,7 +1024,11 @@ function toggleSB() { el('sidebar').classList.toggle('on'); el('sbOverlay').clas
 function closeSB() { el('sidebar').classList.remove('on'); el('sbOverlay').classList.remove('on'); }
 
 // ─── PATIENT PANEL ────────────────────────────────────
-function togglePanel() { el('patPanel').classList.toggle('on'); }
+function togglePanel() {
+  el('patPanel').classList.toggle('on');
+  if (window.innerWidth <= 768) el('ppOverlay').classList.toggle('on');
+}
+function closePP() { el('patPanel').classList.remove('on'); el('ppOverlay').classList.remove('on'); }
 
 // ─── CASE LIST ────────────────────────────────────────
 function renderCases(f='all') {
@@ -1134,6 +1141,12 @@ function filterCases(f, btn) {
 }
 function clearHistory() {
   if(!confirm('Очистить всю историю кейсов?')) return;
+  if(S.active) {
+    clearInterval(S.tmr); _stopRec(true);
+    S.active=false; S.sid=null; S.currentCaseId=null;
+    el('chatEmpty').classList.remove('hidden');
+    el('chatActive').classList.add('hidden');
+  }
   CASES.length = 0; saveC();
   for(const k in MSGS_STORE) delete MSGS_STORE[k];
   saveMsgs();
@@ -1185,7 +1198,7 @@ async function startCase() {
   S.patientName = patientName;
 
   btn.innerHTML = 'Начать кейс →'; btn.disabled=false; closeModal();
-  el('msgInput').disabled = false; el('sendBtn').disabled = false;
+  el('msgInput').disabled = false; el('sendBtn').disabled = false; el('micBtn').disabled = false;
   el('msgInput').placeholder = 'Задайте вопрос пациенту...';
 
   S.sid=sid; S.active=true; S.disease=d; S.mode=mode; S.qCount=0; S.t0=Date.now(); mockIdx=0;
@@ -1249,7 +1262,10 @@ async function sendMsg() {
         S.apiOk=false; el('errBanner').classList.remove('hidden');
       }
     }
-    if(!reply) { await sleep(700+Math.random()*1200); reply=mockReply(txt); }
+    if(!reply) {
+      if(S.sid && S.apiOk) { S.apiOk=false; el('errBanner').classList.remove('hidden'); }
+      await sleep(700+Math.random()*1200); reply=mockReply(txt);
+    }
   } catch(e) {
     console.error('sendMsg error:', e);
     reply = mockReply(txt);
@@ -1468,7 +1484,7 @@ async function finishCase() {
   } else if (total >= 60) {
     showToast(`👍 Кейс завершён — ${total}%`);
   }
-  const last=CASES[CASES.length-1]; if(last){last.score=total;last.active=false;saveC();}
+  const last=CASES.find(c=>c.id===S.currentCaseId)||CASES[CASES.length-1]; if(last){last.score=total;last.active=false;saveC();}
   setQbtns('done'); clearInterval(S.tmr); renderCases();
 }
 
@@ -1484,7 +1500,7 @@ async function abortCase() {
   if(!confirm('Прервать текущий кейс?')) return;
   S.active=false; _stopRec(true); if(S.sid)await apiDel(S.sid); S.sid=null; clearInterval(S.tmr);
   addMsg('❌ Кейс прерван','sys'); setQbtns('done');
-  const last=CASES[CASES.length-1]; if(last&&last.active){last.active=false;saveC();} renderCases();
+  const last=CASES.find(c=>c.id===S.currentCaseId)||CASES[CASES.length-1]; if(last&&last.active){last.active=false;saveC();} renderCases();
 }
 
 // ─── STATS ────────────────────────────────────────────
@@ -1527,10 +1543,23 @@ function toggleKB(c) {
 // ─── VOICE INPUT ──────────────────────────────────────
 let _recognition = null;
 let _recActive = false;
+let _recTimerInterval = null;
+let _recSeconds = 0;
+
+const _MIC_ERRORS = {
+  'not-allowed': 'Доступ к микрофону запрещён. Разрешите доступ в настройках браузера.',
+  'device-not-found': 'Микрофон не обнаружен.',
+  'network': 'Сетевая ошибка при распознавании речи.',
+  'service-not-allowed': 'Сервис распознавания речи недоступен.',
+};
 
 (function _initVoice() {
   const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-  if (!SR) return;
+  if (!SR) {
+    const mb = document.getElementById('micBtn');
+    if (mb) mb.style.display = 'none';
+    return;
+  }
   _recognition = new SR();
   _recognition.lang = 'ru-RU';
   _recognition.interimResults = true;
@@ -1547,27 +1576,42 @@ let _recActive = false;
     if (txt && S.active && !el('msgInput').disabled) sendMsg();
   };
   _recognition.onerror = (e) => {
+    if (e.error === 'no-speech') {
+      _stopRec(false);
+      showToast('Речь не обнаружена — попробуйте ещё раз');
+      return;
+    }
+    if (e.error === 'aborted') { _stopRec(false); return; }
     _stopRec(false);
-    if (e.error !== 'no-speech' && e.error !== 'aborted') showToast('Ошибка микрофона: ' + e.error);
+    showToast(_MIC_ERRORS[e.error] || ('Ошибка микрофона: ' + e.error));
   };
 })();
 
 function toggleVoice() {
-  if (!_recognition) { showToast('Распознавание речи не поддерживается в этом браузере'); return; }
+  if (!_recognition) return;
   if (!S.active) { showToast('Начните кейс для голосового ввода'); return; }
   if (_recActive) { _recognition.stop(); return; }
   _recActive = true;
+  _recSeconds = 0;
   el('micBtn').classList.add('recording');
   const inp = el('msgInput');
+  const prevText = inp.value;
   inp.value = '';
-  inp.placeholder = 'Говорите…';
+  inp.placeholder = 'Говорите… 0:00';
   autoResize(inp);
-  try { _recognition.start(); } catch { _stopRec(false); }
+  _recTimerInterval = setInterval(() => {
+    _recSeconds++;
+    const m = Math.floor(_recSeconds / 60), s = _recSeconds % 60;
+    const inp2 = el('msgInput');
+    if (inp2 && !inp2.disabled) inp2.placeholder = `Говорите… ${m}:${String(s).padStart(2, '0')}`;
+  }, 1000);
+  try { _recognition.start(); } catch { inp.value = prevText; _stopRec(false); }
 }
 
 function _stopRec(abort) {
   if (!_recActive) return;
   _recActive = false;
+  clearInterval(_recTimerInterval); _recTimerInterval = null;
   if (abort) { try { if (_recognition) _recognition.abort(); } catch {} }
   const mb = el('micBtn');
   if (mb) mb.classList.remove('recording');
