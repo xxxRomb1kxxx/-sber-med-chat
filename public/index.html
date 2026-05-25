@@ -975,7 +975,13 @@ async function apiStart(dkey, mode) {
 }
 async function apiMsg(sid, text) {
   const r = await fetch(`${BASE()}/cases/${sid}/message`, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({text}) });
-  if(!r.ok) throw new Error(await r.text());
+  if(!r.ok) {
+    const body = await r.text();
+    const err = new Error(body);
+    err.status = r.status;
+    try { const p = JSON.parse(body); err.detail = typeof p.detail === 'string' ? p.detail : null; } catch {}
+    throw err;
+  }
   const d = await r.json();
   if(d.message_id) return poll(sid, d.message_id);
   return d.patient_reply || d.reply || d.text;
@@ -1292,6 +1298,11 @@ async function sendMsg() {
         // Бэк возвращает patient_reply (строку)
         reply = (typeof raw === 'string') ? raw : (raw && (raw.patient_reply || raw.reply || raw.text));
       } catch(e) {
+        if (e.status === 422) {
+          const msg = e.detail || 'Вопрос не относится к медицинской консультации. Задайте профессиональный вопрос пациенту.';
+          addMsg(msg, 'sys');
+          return; // finally выполнится: скроет typing, разблокирует кнопку
+        }
         console.error('apiMsg failed:', e);
         S.apiOk=false; el('errBanner').classList.remove('hidden');
       }
