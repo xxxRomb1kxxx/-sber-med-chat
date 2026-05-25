@@ -970,7 +970,13 @@ const BASE = () => '/api/v1';
 
 async function apiStart(dkey, mode) {
   const r = await fetch(`${BASE()}/cases/start`, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({user_id:uid, disease_type:dkey==='random'?null:dkey, mode}) });
-  if(!r.ok) throw new Error(await r.text());
+  if(!r.ok) {
+    const body = await r.text();
+    const err = new Error(body);
+    err.status = r.status;
+    try { const p = JSON.parse(body); err.detail = typeof p.detail === 'string' ? p.detail : null; } catch {}
+    throw err;
+  }
   return r.json();
 }
 async function apiMsg(sid, text) {
@@ -1004,7 +1010,12 @@ async function apiFinish(sid) {
   if(!r.ok) throw new Error(await r.text());
   return r.json();
 }
-async function apiDel(sid) { try { await fetch(`${BASE()}/cases/${sid}`, {method:'DELETE'}); } catch {} }
+async function apiDel(sid) {
+  try {
+    await fetch(`${BASE()}/cases/${sid}`, {method:'DELETE'});
+    if(localStorage.getItem('smii_sid') === sid) localStorage.removeItem('smii_sid');
+  } catch {}
+}
 
 // ─── HELPERS ──────────────────────────────────────────
 const sleep = ms => new Promise(r=>setTimeout(r,ms));
@@ -1163,11 +1174,13 @@ function filterCases(f, btn) {
     });
   }, 170);
 }
-function clearHistory() {
+async function clearHistory() {
   if(!confirm('Очистить всю историю кейсов?')) return;
   if(S.active) {
     clearInterval(S.tmr); _stopRec(true);
+    if(S.sid) await apiDel(S.sid);
     S.active=false; S.sid=null; S.currentCaseId=null;
+    localStorage.removeItem('smii_sid');
     el('chatEmpty').classList.remove('hidden');
     el('chatActive').classList.add('hidden');
   }
@@ -1224,13 +1237,16 @@ async function startCase() {
   btn.innerHTML = '<span class="spin"></span>';
   btn.disabled = true;
 
-  if(S.sid) await apiDel(S.sid);
+  // Удаляем старую сессию: сначала из памяти, затем из localStorage (на случай перезагрузки)
+  const prevSid = S.sid || localStorage.getItem('smii_sid');
+  if(prevSid) { await apiDel(prevSid); S.sid = null; }
 
   let sid = null, greet = d.greet, patientName = d.patient, patientAge = d.age, patientGender = d.gender;
   if(HAS_BACKEND) {
     try {
       const r = await apiStart(dkey, mode);
       sid = r.session_id || r.id;
+      if(sid) localStorage.setItem('smii_sid', sid);
       if(r.greeting) greet = r.greeting;
       // Бэк возвращает patient.fio / patient.age / patient.gender
       const p = r.patient || {};
@@ -1238,7 +1254,15 @@ async function startCase() {
       if(p.age)    patientAge    = p.age;
       if(p.gender) patientGender = p.gender === 'Ж' ? 'Женщина' : p.gender === 'М' ? 'Мужчина' : p.gender;
       S.apiOk = true; el('errBanner').classList.add('hidden');
-    } catch(e) { console.error('apiStart failed:', e); S.apiOk=false; el('errBanner').classList.remove('hidden'); }
+    } catch(e) {
+      if(e.status === 409) {
+        // Старая сессия ещё не закрыта на бэке — предлагаем подождать
+        btn.innerHTML = 'Начать кейс →'; btn.disabled=false;
+        showToast(e.detail || 'Предыдущая сессия ещё активна — подождите секунду и попробуйте снова.');
+        return;
+      }
+      console.error('apiStart failed:', e); S.apiOk=false; el('errBanner').classList.remove('hidden');
+    }
   } else { S.apiOk=false; el('errBanner').classList.remove('hidden'); }
   S.patientName = patientName;
 
