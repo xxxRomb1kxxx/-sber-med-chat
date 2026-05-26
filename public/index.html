@@ -935,7 +935,7 @@ const DISEASES = [
 const DM = Object.fromEntries(DISEASES.map(d=>[d.key,d]));
 
 // ─── STATE ────────────────────────────────────────────
-const S = { sid:null, active:false, disease:null, mode:null, qCount:0, t0:null, tmr:null, apiOk:true, patientName:null, lastBotMsgs:[], currentCaseId:null, displayIcon:null };
+const S = { sid:null, active:false, disease:null, mode:null, qCount:0, t0:null, tmr:null, apiOk:true, patientName:null, lastBotMsgs:[], currentCaseId:null, displayIcon:null, diagMode:false };
 const CASES = (() => { try { return JSON.parse(localStorage.getItem('smii_cases')||'[]'); } catch { return []; } })();
 const saveC = () => { try { localStorage.setItem('smii_cases', JSON.stringify(CASES)); } catch { showToast('⚠️ Данные не сохранены: память браузера заполнена'); } };
 // Хранилище сообщений: { caseId: [{role, txt, time}] }
@@ -1349,6 +1349,7 @@ async function sendMsg() {
   const inp = el('msgInput');
   const txt = inp.value.trim();
   if(!txt||!S.active) return;
+  if(S.diagMode) { inp.value=''; inp.style.height=''; await submitDiag(txt); return; }
   inp.value=''; inp.style.height=''; el('sendBtn').disabled=true;
   // Send button pop animation
   const sb = el('sendBtn');
@@ -1528,46 +1529,31 @@ function setQbtns(ph) {
 function showDiagnosisStep() {
   if(!S.active) return;
   _stopRec(true);
-  el('msgInput').disabled = true;
-  el('sendBtn').disabled = true;
-  el('micBtn').disabled = true;
+  S.diagMode = true;
   addMsg('Консультация завершена. Поставьте ваш диагноз — какое заболевание у пациента?', 'sys');
-  el('qbtns').innerHTML = `
-    <div style="display:flex;gap:8px;width:100%;align-items:center">
-      <input id="diagInput" type="text" placeholder="Введите диагноз..."
-        style="flex:1;padding:8px 12px;border:2px solid var(--accent);border-radius:10px;font-size:14px;background:var(--bg);color:var(--text);outline:none"
-        onkeydown="if(event.key==='Enter')submitDiag()" />
-      <button class="qbtn fin" style="white-space:nowrap;flex-shrink:0" onclick="submitDiag()">Подтвердить →</button>
-    </div>`;
-  setTimeout(() => { const di = document.getElementById('diagInput'); if(di) di.focus(); }, 80);
+  el('qbtns').innerHTML = `<span style="font-size:13px;color:var(--gray-t);padding:4px 2px">⬆ Введите диагноз в строке выше и нажмите отправить</span>`;
+  const inp = el('msgInput');
+  inp.disabled = false; inp.value = '';
+  inp.placeholder = 'Введите диагноз пациента...';
+  el('sendBtn').disabled = false; el('micBtn').disabled = false;
+  inp.focus();
   scrollB();
 }
 
-async function submitDiag() {
-  const inp = document.getElementById('diagInput');
-  if(!inp) return;
-  const text = inp.value.trim();
-  if(!text) {
-    inp.style.borderColor = '#EF5350';
-    setTimeout(() => inp.style.borderColor = 'var(--accent)', 800);
-    return;
-  }
-  inp.disabled = true;
-  document.querySelectorAll('#qbtns button').forEach(b => b.disabled = true);
+async function submitDiag(text) {
+  S.diagMode = false;
+  el('msgInput').placeholder = 'Задайте вопрос пациенту...';
   addMsg(text, 'user');
   const actual = S.disease?.name || '';
   const isCorrect = _diagMatch(text, actual);
   if(S.sid && S.apiOk) { try { await apiDiagnosis(S.sid, text); } catch {} }
-  el('msgInput').disabled = false;
-  el('sendBtn').disabled = false;
-  el('micBtn').disabled = false;
   await finishCase(isCorrect, actual);
 }
 
 async function finishCase(diagCorrect = null, actualDisease = null) {
   if(!S.active) return; S.active=false;
   _stopRec(true);
-  addMsg('✅ Завершить консультацию и получить отчёт','user');
+  if(diagCorrect === null) addMsg('✅ Завершить консультацию и получить отчёт','user');
   await showTyping(2200);
   let data=null;
   if(S.sid&&S.apiOk) try{data=await apiFinish(S.sid);}catch{}
