@@ -1010,6 +1010,21 @@ async function apiFinish(sid) {
   if(!r.ok) throw new Error(await r.text());
   return r.json();
 }
+async function apiDiagnosis(sid, diagnosis) {
+  const r = await fetch(`${BASE()}/cases/${sid}/diagnosis`, {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({diagnosis})});
+  if(!r.ok) throw new Error(await r.text());
+  return r.json();
+}
+function _diagMatch(userText, actualName) {
+  const u = userText.toLowerCase().trim();
+  const a = actualName.toLowerCase().trim();
+  if (u === a) return true;
+  const aWords = a.split(/\s+/).filter(w => w.length > 3);
+  if (aWords.some(w => u.includes(w))) return true;
+  const uWords = u.split(/\s+/).filter(w => w.length > 3);
+  if (uWords.some(w => a.includes(w))) return true;
+  return false;
+}
 async function apiDel(sid) {
   try {
     await fetch(`${BASE()}/cases/${sid}`, {method:'DELETE'});
@@ -1464,11 +1479,13 @@ function updateQbtns() {
   _qpool.length = 0;
   hints.forEach(([, q]) => _qpool.push(q));
   const b = el('qbtns');
+  const finBtn = S.mode === 'control'
+    ? `<button class="qbtn fin" onclick="showDiagnosisStep()">🔍 Поставить диагноз</button>`
+    : `<button class="qbtn fin" onclick="finishCase()">✅ Завершить</button>`;
   b.innerHTML = hints.map(([label], i) =>
     `<button class="qbtn" onclick="_qClick(${i})">${label}</button>`
-  ).join('') +
-  `<button class="qbtn fin" onclick="finishCase()">✅ Завершить</button>
-   <button class="qbtn red" onclick="abortCase()">✕ Прервать</button>`;
+  ).join('') + finBtn +
+  `<button class="qbtn red" onclick="abortCase()">✕ Прервать</button>`;
 }
 
 function addMsg(txt, role) {
@@ -1498,7 +1515,7 @@ function setQbtns(ph) {
       <button class="qbtn" onclick="quickQ('Добрый день! Присаживайтесь, пожалуйста. На что жалуетесь?')">Приветствие</button>
       <button class="qbtn" onclick="quickQ('Расскажите, что именно вас беспокоит?')">Жалобы</button>
       <button class="qbtn" onclick="quickQ('Как давно появились симптомы?')">Давность</button>
-      <button class="qbtn fin" onclick="finishCase()">✅ Завершить</button>
+      ${S.mode==='control' ? `<button class="qbtn fin" onclick="showDiagnosisStep()">🔍 Поставить диагноз</button>` : `<button class="qbtn fin" onclick="finishCase()">✅ Завершить</button>`}
       <button class="qbtn red" onclick="abortCase()">✕ Прервать</button>`;
   } else if(ph==='done') {
     b.innerHTML=`
@@ -1508,7 +1525,46 @@ function setQbtns(ph) {
 }
 
 // ─── FINISH ───────────────────────────────────────────
-async function finishCase() {
+function showDiagnosisStep() {
+  if(!S.active) return;
+  _stopRec(true);
+  el('msgInput').disabled = true;
+  el('sendBtn').disabled = true;
+  el('micBtn').disabled = true;
+  addMsg('Консультация завершена. Поставьте ваш диагноз — какое заболевание у пациента?', 'sys');
+  el('qbtns').innerHTML = `
+    <div style="display:flex;gap:8px;width:100%;align-items:center">
+      <input id="diagInput" type="text" placeholder="Введите диагноз..."
+        style="flex:1;padding:8px 12px;border:2px solid var(--accent);border-radius:10px;font-size:14px;background:var(--bg);color:var(--text);outline:none"
+        onkeydown="if(event.key==='Enter')submitDiag()" />
+      <button class="qbtn fin" style="white-space:nowrap;flex-shrink:0" onclick="submitDiag()">Подтвердить →</button>
+    </div>`;
+  setTimeout(() => { const di = document.getElementById('diagInput'); if(di) di.focus(); }, 80);
+  scrollB();
+}
+
+async function submitDiag() {
+  const inp = document.getElementById('diagInput');
+  if(!inp) return;
+  const text = inp.value.trim();
+  if(!text) {
+    inp.style.borderColor = '#EF5350';
+    setTimeout(() => inp.style.borderColor = 'var(--accent)', 800);
+    return;
+  }
+  inp.disabled = true;
+  document.querySelectorAll('#qbtns button').forEach(b => b.disabled = true);
+  addMsg(text, 'user');
+  const actual = S.disease?.name || '';
+  const isCorrect = _diagMatch(text, actual);
+  if(S.sid && S.apiOk) { try { await apiDiagnosis(S.sid, text); } catch {} }
+  el('msgInput').disabled = false;
+  el('sendBtn').disabled = false;
+  el('micBtn').disabled = false;
+  await finishCase(isCorrect, actual);
+}
+
+async function finishCase(diagCorrect = null, actualDisease = null) {
   if(!S.active) return; S.active=false;
   _stopRec(true);
   addMsg('✅ Завершить консультацию и получить отчёт','user');
@@ -1561,6 +1617,7 @@ async function finishCase() {
       ${buildScoreCircle(total, sc, sb, 'итог')}
       <div class="arow"><span>Охват анамнеза (70%)</span><span style="font-weight:600">${pct}%</span></div>
       <div class="arow"><span>Качество языка (30%)</span><span style="font-weight:600">${lang}%</span></div>
+      ${diagCorrect !== null ? `<div class="arow"><span>Диагноз</span><span class="${diagCorrect ? 'ok' : 'no'}" style="font-weight:600">${diagCorrect ? '✓ Верно' : '✗ Неверно'}</span></div>${diagCorrect === false ? `<div style="font-size:12px;color:var(--gray-t);padding:2px 0 6px 4px">Правильный ответ: ${esc(actualDisease||'')}</div>` : ''}` : ''}
       <div style="margin-top:10px;padding:10px;background:${sb};border-radius:10px;font-size:13px;color:${sc}">
         ${total>=80?'🏆 Отлично! Так держать!':total>=60?'👍 Неплохо! Уточняйте анамнез подробнее.':'📚 Нужно больше практики. Задавайте больше вопросов.'}
       </div>
@@ -1572,13 +1629,16 @@ async function finishCase() {
     if (repEl) activateRings(repEl.querySelector('#ra'));
   }, 80);
   // Конфетти при хорошем результате
+  const diagBonus = diagCorrect === true ? ' · Диагноз верный ✓' : diagCorrect === false ? ' · Диагноз неверный ✗' : '';
   if (total >= 80) {
     setTimeout(() => {
       launchConfetti(120);
-      showToast(`🏆 Отличный результат — ${total}%!`);
+      showToast(`🏆 Отличный результат — ${total}%!${diagBonus}`);
     }, 400);
   } else if (total >= 60) {
-    showToast(`👍 Кейс завершён — ${total}%`);
+    showToast(`👍 Кейс завершён — ${total}%${diagBonus}`);
+  } else if (diagCorrect !== null) {
+    showToast(`📋 Кейс завершён — ${total}%${diagBonus}`);
   }
   const last=CASES.find(c=>c.id===S.currentCaseId)||CASES[CASES.length-1]; if(last){last.score=total;last.active=false;saveC();}
   setQbtns('done'); clearInterval(S.tmr); renderCases();
