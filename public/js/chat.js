@@ -74,7 +74,8 @@ function setQbtns(ph) {
 async function sendMsg() {
   const inp = el('msgInput');
   const txt = inp.value.trim();
-  if (!txt || !S.active || _sending) return;
+  if (!txt || !S.active) return;
+  if (_sending) { showToast('Подождите ответа пациента'); return; }
   if (S.diagMode) { inp.value = ''; inp.style.height = ''; await submitDiag(txt); return; }
   inp.value = ''; inp.style.height = ''; el('sendBtn').disabled = true;
   _sending = true;
