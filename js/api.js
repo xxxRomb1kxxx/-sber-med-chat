@@ -56,7 +56,7 @@ async function poll(sid, mid) {
         throw err;
       }
     } catch (e) {
-      if (e.status === 404 || e.status === 'api_error') throw e;
+      if (e.status === 404 || e.status === 'api_error' || e.status === 422) throw e;
     }
   }
   throw new Error('Timeout');
