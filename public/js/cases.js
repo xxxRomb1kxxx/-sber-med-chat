@@ -61,9 +61,6 @@ function viewCase(c) {
       ? `<button class="qbtn" style="background:#c0392b;border-color:#c0392b;color:#fff" onclick="abortOrphan(${c.id})">🗑 Прервать сессию</button>`
       : `<button class="qbtn" onclick="openModal()">🎯 Новый кейс</button>`}`;
   _stopRec(true);
-  el('msgInput').disabled = true;
-  el('sendBtn').disabled = true;
-  el('micBtn').disabled = true;
   el('msgInput').placeholder = 'Режим просмотра истории';
   scrollB();
 }
@@ -80,9 +77,6 @@ async function abortOrphan(id) {
 
 function backToActive() {
   S.selectedCaseId = S.currentCaseId;
-  el('msgInput').disabled = false;
-  el('sendBtn').disabled = false;
-  el('micBtn').disabled = false;
   el('msgInput').placeholder = 'Задайте вопрос пациенту...';
   if (!S.active) {
     el('chatEmpty').classList.remove('hidden');
