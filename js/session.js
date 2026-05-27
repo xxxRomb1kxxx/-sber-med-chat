@@ -30,7 +30,7 @@ async function startCase() {
       if (p.fio)    patientName   = p.fio;
       if (p.age)    patientAge    = p.age;
       if (p.gender) patientGender = p.gender === 'Ж' ? 'Женщина' : p.gender === 'М' ? 'Мужчина' : p.gender;
-      S.apiOk = true; el('errBanner').classList.add('hidden');
+      S.apiOk = true;
     } catch (e) {
       if (e.status === 409) {
         btn.innerHTML = 'Начать кейс →'; btn.disabled = false;
@@ -44,9 +44,9 @@ async function startCase() {
         }
         return;
       }
-      console.error('apiStart failed:', e); S.apiOk = false; el('errBanner').classList.remove('hidden');
+      console.error('apiStart failed:', e); S.apiOk = false;
     }
-  } else { S.apiOk = false; el('errBanner').classList.remove('hidden'); }
+  } else { S.apiOk = false; }
   S.patientName = patientName;
 
   btn.innerHTML = 'Начать кейс →'; btn.disabled = false; closeModal();
