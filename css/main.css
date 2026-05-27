@@ -323,8 +323,10 @@ html, body { height: 100%; overflow: hidden; font-family: -apple-system, BlinkMa
   animation: wlFadeUp .55s .46s both ease-out;
   background: linear-gradient(90deg, var(--green) 0%, #4CB86A 40%, var(--green) 80%);
   background-size: 200% auto;
+  background-position: left center;
+  transition: background-position .6s ease, transform .2s, filter .2s;
 }
-.wl-cta:hover { animation: shimmerBtn 1.4s linear infinite; transform: translateY(-2px) scale(1.01); }
+.wl-cta:hover { background-position: right center; transform: translateY(-2px) scale(1.01); filter: brightness(1.08); }
 .wl-hint { animation: wlFadeUp .55s .6s both ease-out; }
 
 /* Floating particles on welcome */
