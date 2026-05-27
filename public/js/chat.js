@@ -71,6 +71,8 @@ function setQbtns(ph) {
   }
 }
 
+const _OFFTOPIC_RE = /\b(убить|убийств|наркотик|отравить|яд|взрыв|террорист|оружи|суицид|самоубийств|секс|порно|мат|хакер|взломать)\b/i;
+
 async function sendMsg() {
   const inp = el('msgInput');
   const txt = inp.value.trim();
@@ -84,20 +86,18 @@ async function sendMsg() {
   sb.addEventListener('animationend', () => sb.classList.remove('sending'), { once: true });
   addMsg(txt, 'user'); updateProg();
   showTyping(0);
-  let reply;
+  let reply, offTopic = _OFFTOPIC_RE.test(txt);
   try {
-    if (S.sid) {
+    if (!offTopic && S.sid) {
       try {
         const raw = await apiMsg(S.sid, txt);
         reply = (typeof raw === 'string') ? raw : (raw && (raw.patient_reply || raw.reply || raw.text));
-        if (reply && !S.apiOk) { S.apiOk = true; el('errBanner').classList.add('hidden'); }
       } catch (e) {
         if (e.status === 422) {
-          addMsg(e.detail || 'Вопрос не относится к медицинской консультации. Задайте профессиональный вопрос пациенту.', 'sys');
-          return;
+          offTopic = true;
+        } else {
+          console.error('apiMsg failed:', e);
         }
-        console.error('apiMsg failed:', e);
-        if (S.apiOk) { S.apiOk = false; el('errBanner').classList.remove('hidden'); }
       }
     }
   } catch (e) {
@@ -108,5 +108,6 @@ async function sendMsg() {
     el('sendBtn').disabled = false;
   }
   if (reply) { S.lastBotMsgs.push(reply); addMsg(reply, 'bot'); }
+  else if (offTopic) { addMsg('Вопрос не соответствует теме медицинской консультации. Задавайте вопросы по теме приёма.', 'sys'); }
   else { addMsg('Сервис временно недоступен. Попробуйте позже.', 'sys'); }
 }

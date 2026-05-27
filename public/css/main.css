@@ -120,7 +120,6 @@ html, body { height: 100%; overflow: hidden; font-family: -apple-system, BlinkMa
 .ce-btn { padding: 12px 28px; border-radius: var(--r-xl); background: var(--green); color: #fff; border: none; font-size: 15px; font-weight: 600; cursor: pointer; font-family: inherit; }
 
 .chat-active { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
-.err-banner { background: #FFEBEE; border-bottom: 1px solid #FFCDD2; padding: 7px 14px; font-size: 13px; color: #C62828; display: flex; align-items: center; gap: 7px; flex-shrink: 0; }
 .chat-hdr { height: 58px; background: #fff; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 11px; padding: 0 14px; flex-shrink: 0; }
 .p-avatar { width: 38px; height: 38px; border-radius: 50%; background: linear-gradient(135deg,#5C9BD6,#3776B8); display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
 .p-info { flex: 1; min-width: 0; }
