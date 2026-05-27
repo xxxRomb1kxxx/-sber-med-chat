@@ -1,4 +1,5 @@
 const _qpool = [];
+let _sending = false;
 
 function quickQ(t) { el('msgInput').value = t; sendMsg(); }
 function _qClick(i) { quickQ(_qpool[i]); }
@@ -73,9 +74,10 @@ function setQbtns(ph) {
 async function sendMsg() {
   const inp = el('msgInput');
   const txt = inp.value.trim();
-  if (!txt || !S.active) return;
+  if (!txt || !S.active || _sending) return;
   if (S.diagMode) { inp.value = ''; inp.style.height = ''; await submitDiag(txt); return; }
   inp.value = ''; inp.style.height = ''; el('sendBtn').disabled = true;
+  _sending = true;
   const sb = el('sendBtn');
   sb.classList.add('sending');
   sb.addEventListener('animationend', () => sb.classList.remove('sending'), { once: true });
@@ -83,25 +85,24 @@ async function sendMsg() {
   showTyping(0);
   let reply;
   try {
-    if (S.sid && S.apiOk) {
+    if (S.sid) {
       try {
         const raw = await apiMsg(S.sid, txt);
         reply = (typeof raw === 'string') ? raw : (raw && (raw.patient_reply || raw.reply || raw.text));
+        if (reply && !S.apiOk) { S.apiOk = true; el('errBanner').classList.add('hidden'); }
       } catch (e) {
         if (e.status === 422) {
           addMsg(e.detail || 'Вопрос не относится к медицинской консультации. Задайте профессиональный вопрос пациенту.', 'sys');
           return;
         }
         console.error('apiMsg failed:', e);
-        S.apiOk = false; el('errBanner').classList.remove('hidden');
+        if (S.apiOk) { S.apiOk = false; el('errBanner').classList.remove('hidden'); }
       }
-    }
-    if (!reply) {
-      if (S.sid && S.apiOk) { S.apiOk = false; el('errBanner').classList.remove('hidden'); }
     }
   } catch (e) {
     console.error('sendMsg error:', e);
   } finally {
+    _sending = false;
     hideTyping();
     el('sendBtn').disabled = false;
   }
