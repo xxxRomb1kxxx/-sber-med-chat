@@ -46,10 +46,10 @@ async function poll(sid, mid) {
       if (d.status === 'error') {
         const errStr = d.error || '';
         const err = new Error(errStr);
-        if (errStr.includes('llm_moderation')) {
+        const m = errStr.match(/'message':\s*'([^']+)'/);
+        if (m) {
           err.status = 422;
-          const m = errStr.match(/'message':\s*'([^']+)'/);
-          err.detail = m ? m[1] : 'Вопрос не соответствует теме медицинской консультации. Задавайте вопросы по теме приёма.';
+          err.detail = m[1];
         } else {
           err.status = 'api_error';
         }

@@ -82,7 +82,7 @@ async function sendMsg() {
   const sb = el('sendBtn');
   sb.classList.add('sending');
   sb.addEventListener('animationend', () => sb.classList.remove('sending'), { once: true });
-  addMsg(txt, 'user'); updateProg();
+  addMsg(txt, 'user');
   showTyping(0);
   let reply, offTopic = false;
   try {
@@ -106,6 +106,6 @@ async function sendMsg() {
     hideTyping();
     el('sendBtn').disabled = false;
   }
-  if (reply) { S.lastBotMsgs.push(reply); addMsg(reply, 'bot'); }
+  if (reply) { S.lastBotMsgs.push(reply); addMsg(reply, 'bot'); updateProg(); }
   else if (!offTopic) { addMsg('Сервис временно недоступен. Попробуйте позже.', 'sys'); }
 }
