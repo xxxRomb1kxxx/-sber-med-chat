@@ -98,14 +98,13 @@ async function sendMsg() {
     }
     if (!reply) {
       if (S.sid && S.apiOk) { S.apiOk = false; el('errBanner').classList.remove('hidden'); }
-      await sleep(700 + Math.random() * 1200); reply = mockReply(txt);
     }
   } catch (e) {
     console.error('sendMsg error:', e);
-    reply = mockReply(txt);
   } finally {
     hideTyping();
     el('sendBtn').disabled = false;
   }
   if (reply) { S.lastBotMsgs.push(reply); addMsg(reply, 'bot'); }
+  else { addMsg('Сервис временно недоступен. Попробуйте позже.', 'sys'); }
 }

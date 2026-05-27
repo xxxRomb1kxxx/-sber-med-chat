@@ -39,11 +39,14 @@ async function poll(sid, mid) {
     await sleep(500);
     try {
       const r = await fetch(`${BASE()}/cases/${sid}/messages/${mid}`);
+      if (r.status === 404) throw Object.assign(new Error('Message not found'), { status: 404 });
       if (!r.ok) continue;
       const d = await r.json();
       if (d.status === 'done') return d.reply;
-      if (d.status === 'error') throw new Error(d.error);
-    } catch {}
+      if (d.status === 'error') throw Object.assign(new Error(d.error), { status: 'api_error' });
+    } catch (e) {
+      if (e.status === 404 || e.status === 'api_error') throw e;
+    }
   }
   throw new Error('Timeout');
 }
