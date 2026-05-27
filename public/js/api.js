@@ -43,7 +43,18 @@ async function poll(sid, mid) {
       if (!r.ok) continue;
       const d = await r.json();
       if (d.status === 'done') return d.reply;
-      if (d.status === 'error') throw Object.assign(new Error(d.error), { status: 'api_error' });
+      if (d.status === 'error') {
+        const errStr = d.error || '';
+        const err = new Error(errStr);
+        if (errStr.includes('llm_moderation')) {
+          err.status = 422;
+          const m = errStr.match(/'message':\s*'([^']+)'/);
+          err.detail = m ? m[1] : 'Вопрос не соответствует теме медицинской консультации. Задавайте вопросы по теме приёма.';
+        } else {
+          err.status = 'api_error';
+        }
+        throw err;
+      }
     } catch (e) {
       if (e.status === 404 || e.status === 'api_error') throw e;
     }
