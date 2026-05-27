@@ -71,8 +71,6 @@ function setQbtns(ph) {
   }
 }
 
-const _OFFTOPIC_RE = /\b(убить|убийств|наркотик|отравить|яд|взрыв|террорист|оружи|суицид|самоубийств|секс|порно|мат|хакер|взломать)\b/i;
-
 async function sendMsg() {
   const inp = el('msgInput');
   const txt = inp.value.trim();
@@ -86,18 +84,19 @@ async function sendMsg() {
   sb.addEventListener('animationend', () => sb.classList.remove('sending'), { once: true });
   addMsg(txt, 'user'); updateProg();
   showTyping(0);
-  let reply, offTopic = _OFFTOPIC_RE.test(txt);
+  let reply, offTopic = false;
   try {
-    if (!offTopic && S.sid) {
+    if (S.sid) {
       try {
         const raw = await apiMsg(S.sid, txt);
         reply = (typeof raw === 'string') ? raw : (raw && (raw.patient_reply || raw.reply || raw.text));
       } catch (e) {
         if (e.status === 422) {
           offTopic = true;
-        } else {
-          console.error('apiMsg failed:', e);
+          addMsg(e.detail || 'Вопрос не соответствует теме медицинской консультации. Задавайте вопросы по теме приёма.', 'sys');
+          return;
         }
+        console.error('apiMsg failed:', e);
       }
     }
   } catch (e) {
@@ -108,6 +107,5 @@ async function sendMsg() {
     el('sendBtn').disabled = false;
   }
   if (reply) { S.lastBotMsgs.push(reply); addMsg(reply, 'bot'); }
-  else if (offTopic) { addMsg('Вопрос не соответствует теме медицинской консультации. Задавайте вопросы по теме приёма.', 'sys'); }
-  else { addMsg('Сервис временно недоступен. Попробуйте позже.', 'sys'); }
+  else if (!offTopic) { addMsg('Сервис временно недоступен. Попробуйте позже.', 'sys'); }
 }
