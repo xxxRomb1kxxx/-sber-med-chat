@@ -125,4 +125,5 @@ function ripple(btn, clientX, clientY) {
   r.style.cssText = `width:${size}px;height:${size}px;left:${x}px;top:${y}px`;
   btn.appendChild(r);
   r.addEventListener('animationend', () => r.remove());
+
 }
