@@ -91,8 +91,7 @@ async function sendMsg() {
         const raw = await apiMsg(S.sid, txt);
         reply = (typeof raw === 'string') ? raw : (raw && (raw.patient_reply || raw.reply || raw.text));
       } catch (e) {
-        "if (e.status === 422) {"
-        if (e.status === 404) {
+        if (e.status === 422) {
           offTopic = true;
           addMsg(e.detail || 'Вопрос не соответствует теме медицинской консультации. Задавайте вопросы по теме приёма.', 'sys');
           return;
