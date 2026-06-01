@@ -7,12 +7,20 @@ function renderCases(f = 'all') {
     const hiddenControl = c.mode === 'control' && c.score == null && c.active;
     const displayName = hiddenControl ? '❓ Контрольный кейс' : esc(c.name);
     const displayIcon = hiddenControl ? (c.patientIcon || '👤') : (c.patientIcon || c.icon);
+    const msgs = MSGS_STORE[c.id] || [];
+    const lastMsg = msgs.filter(m => m.role === 'user' || m.role === 'bot').slice(-1)[0];
+    let prevHtml = '';
+    if (lastMsg) {
+      const who = lastMsg.role === 'user' ? 'Вы' : (c.patientName || 'Пациент');
+      prevHtml = `<div class="case-prev"><span class="cp-who">${esc(who)}:</span> ${esc(lastMsg.txt)}</div>`;
+    }
     return `
     <div class="case-row ${c.id === activeId ? 'active' : ''}" data-t="${c.mode}" onclick="selectCase(${c.id})" style="cursor:pointer">
       <div class="case-ico">${displayIcon}</div>
       <div class="case-inf">
         <div class="case-name">${displayName}</div>
         <div class="case-meta">${c.date}${c.score != null ? ' · <b>' + c.score + '%</b>' : c.active ? ' · в процессе' : ''}</div>
+        ${prevHtml}
       </div>
       <span class="case-badge ${c.mode === 'training' ? 'bt' : 'bc'}">${c.mode === 'training' ? 'Тренировка' : 'Контроль'}</span>
     </div>`;
@@ -50,9 +58,16 @@ function viewCase(c) {
     ${msgs.map(m => {
       if (m.role === 'user') return `<div class="mrow user"><div class="mav u">ВЫ</div><div><div class="bbl">${esc(m.txt)}</div><div class="mtime">${m.time}</div></div></div>`;
       if (m.role === 'bot')  return `<div class="mrow bot"><div class="mav b">${viewIcon}</div><div><div class="bbl">${esc(m.txt)}</div><div class="mtime">${m.time}</div></div></div>`;
+      if (m.role === 'html') return `<div class="mrow bot" style="max-width:92%"><div class="mav b">🏥</div><div>${m.txt}</div></div>`;
       return `<div class="mrow sys"><div class="bbl">${esc(m.txt)}</div></div>`;
     }).join('')}
     <div class="typing-row" id="typingRow"></div>`;
+  el('msgs').querySelectorAll('.rep-card').forEach(card => {
+    const active = card.querySelector('.rep-tab.active');
+    const tabId = active ? { a: 'ra', l: 'rl', t: 'rt' }[active.getAttribute('onclick')?.match(/'(\w)'\)/)?.[1] || 't'] : 'rt';
+    const target = card.querySelector('#' + tabId) || card.querySelector('#rt');
+    if (target) activateRings(target);
+  });
   const backLabel = S.active ? '← Текущий кейс' : '← Назад';
   const isOrphan = c.active && c.id !== S.currentCaseId;
   el('qbtns').innerHTML = `
@@ -93,6 +108,7 @@ function backToActive() {
     ${msgs.map(m => {
       if (m.role === 'user') return `<div class="mrow user"><div class="mav u">ВЫ</div><div><div class="bbl">${esc(m.txt)}</div><div class="mtime">${m.time}</div></div></div>`;
       if (m.role === 'bot')  return `<div class="mrow bot"><div class="mav b">${icon}</div><div><div class="bbl">${esc(m.txt)}</div><div class="mtime">${m.time}</div></div></div>`;
+      if (m.role === 'html') return `<div class="mrow bot" style="max-width:92%"><div class="mav b">🏥</div><div>${m.txt}</div></div>`;
       return `<div class="mrow sys"><div class="bbl">${esc(m.txt)}</div></div>`;
     }).join('')}
     <div class="typing-row" id="typingRow"><div class="mav b" id="typingAv">${icon}</div><div class="typing-bbl"><div class="tdot"></div><div class="tdot"></div><div class="tdot"></div></div></div>`;

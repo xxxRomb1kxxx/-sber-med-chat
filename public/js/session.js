@@ -102,7 +102,7 @@ function showDiagnosisStep() {
   _stopRec(true);
   S.diagMode = true;
   addMsg('Консультация завершена. Поставьте ваш диагноз — какое заболевание у пациента?', 'sys');
-  el('qbtns').innerHTML = `<span style="font-size:13px;color:var(--gray-t);padding:4px 2px">⬆ Введите диагноз в строке выше и нажмите отправить</span>`;
+  el('qbtns').innerHTML = `<span style="font-size:13px;color:var(--gray-t);padding:4px 2px">⬇ Введите диагноз в строке ниже и нажмите отправить</span>`;
   const inp = el('msgInput');
   inp.disabled = false; inp.value = '';
   inp.placeholder = 'Введите диагноз пациента...';
