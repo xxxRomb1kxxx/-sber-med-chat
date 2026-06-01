@@ -92,6 +92,6 @@ function _diagMatch(userText, actualName) {
 async function apiDel(sid) {
   try {
     await fetch(`${BASE()}/cases/${sid}`, { method: 'DELETE' });
-    if (localStorage.getItem('smii_sid') === sid) localStorage.removeItem('smii_sid');
+    if (localStorage.getItem('rmd_sid') === sid) localStorage.removeItem('rmd_sid');
   } catch {}
 }
