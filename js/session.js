@@ -16,7 +16,7 @@ async function startCase() {
   btn.innerHTML = '<span class="spin"></span>';
   btn.disabled = true;
 
-  const prevSid = S.sid || localStorage.getItem('smii_sid');
+  const prevSid = S.sid || localStorage.getItem('rmd_sid');
   if (prevSid) { await apiDel(prevSid); S.sid = null; }
 
   let sid = null, greet = d.greet, patientName = d.patient, patientAge = d.age, patientGender = d.gender;
@@ -24,7 +24,7 @@ async function startCase() {
     try {
       const r = await apiStart(dkey, mode);
       sid = r.session_id || r.id;
-      if (sid) localStorage.setItem('smii_sid', sid);
+      if (sid) localStorage.setItem('rmd_sid', sid);
       if (r.greeting) greet = r.greeting;
       const p = r.patient || {};
       if (p.fio)    patientName   = p.fio;

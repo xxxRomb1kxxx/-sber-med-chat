@@ -3,9 +3,10 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>СберМедИИ — Тренажёр врача</title>
+<title>Анамнезум — Тренажёр врача</title>
 <script>window.__API_URL__ = "__API_URL__";</script>
 <link rel="stylesheet" href="css/main.css">
+<link rel="icon" href="img/3b86047e-fda9-44be-9d72-1d628edb0e0a.png">
 </head>
 <body>
 
@@ -16,13 +17,9 @@
 <div id="welcome" class="screen" style="display:flex">
   <div id="wl-particles"></div>
   <div class="wl-logo">
-    <svg viewBox="0 0 48 48" fill="none">
-      <path d="M24 6C13.5 6 5 14.5 5 25s8.5 19 19 19 19-8.5 19-19" stroke="white" stroke-width="4" stroke-linecap="round"/>
-      <path d="M24 16l7 7-7 7" stroke="white" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
-      <path d="M31 23H17" stroke="white" stroke-width="3.5" stroke-linecap="round"/>
-    </svg>
+    <img src="img/3b86047e-fda9-44be-9d72-1d628edb0e0a.png" style="width:56px;height:56px;object-fit:contain">
   </div>
-  <h1 class="wl-title">СберМедИИ</h1>
+  <h1 class="wl-title">Анамнезум</h1>
   <p class="wl-sub">Тренажёр для врачей с ИИ-пациентами. Практикуйте диагностику и получайте детальные оценки.</p>
   <div class="wl-grid">
     <div class="wl-card"><div class="wl-card-icon">🤖</div><div class="wl-card-title">ИИ-пациент</div><div class="wl-card-desc">Реалистичные диалоги на GigaChat</div></div>
@@ -31,7 +28,7 @@
     <div class="wl-card"><div class="wl-card-icon">🎯</div><div class="wl-card-title">Два режима</div><div class="wl-card-desc">Тренировка с подсказками и контроль</div></div>
   </div>
   <button class="wl-cta" onclick="enterApp()">Начать тренировку →</button>
-  <div class="wl-hint">v1.0 · СберМедИИ</div>
+  <div class="wl-hint">v1.0 · Анамнезум</div>
 </div>
 
 <!-- ══════════ APP ══════════ -->
@@ -40,9 +37,9 @@
   <nav class="topnav">
     <button class="burger" onclick="toggleSB()" aria-label="Меню">☰</button>
     <div class="brand-icon">
-      <svg viewBox="0 0 22 22" fill="none"><path d="M11 2C6 2 2 6 2 11s4 9 9 9 9-4 9-9" stroke="white" stroke-width="2.2" stroke-linecap="round"/><path d="M11 6l3 3-3 3" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M14 9H7" stroke="white" stroke-width="2" stroke-linecap="round"/></svg>
+      <img src="img/3b86047e-fda9-44be-9d72-1d628edb0e0a.png" style="width:26px;height:26px;object-fit:contain">
     </div>
-    <span class="brand-name">СберМедИИ</span>
+    <span class="brand-name">Анамнезум</span>
     <div class="topnav-center">
       <button class="nav-btn active" data-pg="chat" onclick="goPage('chat',this)">💬 Тренажёр</button>
       <button class="nav-btn" data-pg="stats" onclick="goPage('stats',this)">📊 Статистика</button>

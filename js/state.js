@@ -9,25 +9,25 @@ const S = {
 };
 
 const CASES = (() => {
-  try { return JSON.parse(localStorage.getItem('smii_cases') || '[]'); } catch { return []; }
+  try { return JSON.parse(localStorage.getItem('rmd_cases') || '[]'); } catch { return []; }
 })();
 
 const saveC = () => {
-  try { localStorage.setItem('smii_cases', JSON.stringify(CASES)); }
+  try { localStorage.setItem('rmd_cases', JSON.stringify(CASES)); }
   catch { showToast('⚠️ Данные не сохранены: память браузера заполнена'); }
 };
 
 const MSGS_STORE = (() => {
-  try { return JSON.parse(localStorage.getItem('smii_msgs') || '{}'); } catch { return {}; }
+  try { return JSON.parse(localStorage.getItem('rmd_msgs') || '{}'); } catch { return {}; }
 })();
 
 const saveMsgs = () => {
-  try { localStorage.setItem('smii_msgs', JSON.stringify(MSGS_STORE)); }
+  try { localStorage.setItem('rmd_msgs', JSON.stringify(MSGS_STORE)); }
   catch { showToast('⚠️ История не сохранена: память браузера заполнена'); }
 };
 
-let uid = localStorage.getItem('smii_uid') || ('u' + Math.random().toString(36).slice(2, 8));
-localStorage.setItem('smii_uid', uid);
+let uid = localStorage.getItem('rmd_uid') || ('u' + Math.random().toString(36).slice(2, 8));
+localStorage.setItem('rmd_uid', uid);
 
 let mockIdx = 0;
 

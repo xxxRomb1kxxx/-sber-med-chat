@@ -140,7 +140,7 @@ async function clearHistory() {
     clearInterval(S.tmr); _stopRec(true);
     if (S.sid) await apiDel(S.sid);
     S.active = false; S.sid = null; S.currentCaseId = null; S.selectedCaseId = null;
-    localStorage.removeItem('smii_sid');
+    localStorage.removeItem('rmd_sid');
     el('chatEmpty').classList.remove('hidden');
     el('chatActive').classList.add('hidden');
   }
