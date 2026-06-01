@@ -44,7 +44,7 @@ function viewCase(c) {
   const hasNoHistory = rawMsgs === undefined;
   el('chatEmpty').classList.add('hidden');
   el('chatActive').classList.remove('hidden');
-  el('errBanner').classList.add('hidden');
+  el('errBanner')?.classList.add('hidden');
   const viewIcon = c.patientIcon || c.icon;
   el('pAvatar').textContent = viewIcon;
   el('pName').textContent = c.patientName || c.name;
