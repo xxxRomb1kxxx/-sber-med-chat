@@ -22,11 +22,11 @@ html, body { height: 100%; overflow: hidden; font-family: -apple-system, BlinkMa
 }
 .wl-logo {
   width: 88px; height: 88px;
-  background: linear-gradient(135deg, #21A038, #17832E);
-  border-radius: 24px; display: flex; align-items: center; justify-content: center;
-  margin-bottom: 20px; box-shadow: 0 8px 32px rgba(33,160,56,.28);
+  background: none; border-radius: 0; box-shadow: none;
+  display: flex; align-items: center; justify-content: center;
+  margin-bottom: 20px;
 }
-.wl-logo svg { width: 48px; height: 48px; }
+.wl-logo img { width: 88px; height: 88px; object-fit: contain; }
 .wl-title { font-size: 34px; font-weight: 800; margin-bottom: 10px; text-align: center; }
 .wl-sub { font-size: 16px; color: var(--gray-t); text-align: center; max-width: 340px; line-height: 1.55; margin-bottom: 36px; }
 .wl-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; max-width: 480px; width: 100%; margin-bottom: 36px; }
@@ -53,8 +53,8 @@ html, body { height: 100%; overflow: hidden; font-family: -apple-system, BlinkMa
   display: flex; align-items: center; padding: 0 14px; gap: 10px; flex-shrink: 0; z-index: 30;
 }
 .burger { width: 36px; height: 36px; border: none; background: transparent; cursor: pointer; font-size: 20px; display: none; align-items: center; justify-content: center; border-radius: var(--r-sm); }
-.brand-icon { width: 34px; height: 34px; background: linear-gradient(135deg,#21A038,#17832E); border-radius: 10px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
-.brand-icon svg { width: 20px; height: 20px; }
+.brand-icon { width: 34px; height: 34px; background: none; border-radius: 0; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.brand-icon img { width: 34px; height: 34px; object-fit: contain; }
 .brand-name { font-size: 16px; font-weight: 700; }
 .topnav-center { flex: 1; display: flex; justify-content: center; gap: 2px; }
 .nav-btn { padding: 7px 13px; border-radius: var(--r-md); font-size: 14px; font-weight: 500; color: var(--gray-t); border: none; background: transparent; cursor: pointer; font-family: inherit; transition: all .15s; }
