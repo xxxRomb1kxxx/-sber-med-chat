@@ -41,7 +41,7 @@ function addMsg(txt, role) {
   else if (role === 'html') html = `<div class="mrow bot" style="max-width:92%"><div class="mav b">🏥</div><div>${txt}</div></div>`;
   const d = document.createElement('div'); d.innerHTML = html;
   msgs.insertBefore(d.firstElementChild, tr); scrollB();
-  if (S.currentCaseId && (role === 'user' || role === 'bot' || role === 'sys')) {
+  if (S.currentCaseId) {
     if (!MSGS_STORE[S.currentCaseId]) MSGS_STORE[S.currentCaseId] = [];
     MSGS_STORE[S.currentCaseId].push({ role, txt, time: t, icon: S.disease?.icon });
     saveMsgs();
