@@ -12,9 +12,10 @@ function updateProg() {
 
 function updateQbtns() {
   if (!S.disease || !S.active) return;
-  el('qbtns').innerHTML =
-    `<button class="qbtn fin" onclick="showDiagnosisStep()">🔍 Поставить диагноз</button>` +
-    `<button class="qbtn red" onclick="abortCase()">✕ Прервать</button>`;
+  const finBtn = S.mode === 'control'
+    ? `<button class="qbtn fin" onclick="showDiagnosisStep()">🔍 Поставить диагноз</button>`
+    : `<button class="qbtn fin" onclick="finishCase()">✅ Завершить</button>`;
+  el('qbtns').innerHTML = finBtn + `<button class="qbtn red" onclick="abortCase()">✕ Прервать</button>`;
 }
 
 function addMsg(txt, role) {
@@ -43,9 +44,10 @@ function hideTyping() { el('typingRow').classList.remove('on'); }
 function setQbtns(ph) {
   const b = el('qbtns');
   if (ph === 'start') {
-    b.innerHTML = `
-      <button class="qbtn fin" onclick="showDiagnosisStep()">🔍 Поставить диагноз</button>
-      <button class="qbtn red" onclick="abortCase()">✕ Прервать</button>`;
+    b.innerHTML = (S.mode === 'control'
+      ? `<button class="qbtn fin" onclick="showDiagnosisStep()">🔍 Поставить диагноз</button>`
+      : `<button class="qbtn fin" onclick="finishCase()">✅ Завершить</button>`) +
+      `<button class="qbtn red" onclick="abortCase()">✕ Прервать</button>`;
   } else if (ph === 'done') {
     b.innerHTML = `
       <button class="qbtn" onclick="openModal()">🎯 Новый кейс</button>
