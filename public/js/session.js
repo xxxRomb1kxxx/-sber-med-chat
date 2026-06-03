@@ -72,6 +72,9 @@ async function startCase() {
   el('ppMeta').textContent = patientAge ? `${patientAge} лет · ${patientGender}` : '—';
   el('ppDisease').textContent = isControl ? '❓ Поставьте диагноз' : `${d.icon} ${d.name}`;
   el('ppMode').textContent = isControl ? 'Контроль' : 'Тренировка';
+  const ppFin = el('ppFinBtn');
+  if (isControl) { ppFin.textContent = '🔍 Поставить диагноз'; ppFin.onclick = showDiagnosisStep; }
+  else           { ppFin.textContent = '✅ Завершить кейс';   ppFin.onclick = finishCase; }
   el('ppQ').textContent = '0'; el('ppDur').textContent = '0 сек'; el('ppFill').style.width = '0%';
 
   el('msgs').innerHTML = `<div class="typing-row" id="typingRow">
