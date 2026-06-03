@@ -1,16 +1,7 @@
-const _qpool = [];
 let _sending = false;
 
-function quickQ(t) { el('msgInput').value = t; sendMsg(); }
-function _qClick(i) { quickQ(_qpool[i]); }
 function onKey(e) { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMsg(); } }
 function autoResize(el2) { el2.style.height = 'auto'; el2.style.height = Math.min(el2.scrollHeight, 96) + 'px'; }
-
-function getContextHints(dkey, qCount) {
-  const hints = HINTS[dkey] || HINTS.diabetes;
-  const start = Math.min(qCount, hints.length - 4);
-  return hints.slice(start, start + 4);
-}
 
 function updateProg() {
   S.qCount++;
@@ -21,15 +12,9 @@ function updateProg() {
 
 function updateQbtns() {
   if (!S.disease || !S.active) return;
-  const hints = getContextHints(S.disease.key, S.qCount);
-  _qpool.length = 0;
-  hints.forEach(([, q]) => _qpool.push(q));
-  const finBtn = S.mode === 'control'
-    ? `<button class="qbtn fin" onclick="showDiagnosisStep()">🔍 Поставить диагноз</button>`
-    : `<button class="qbtn fin" onclick="finishCase()">✅ Завершить</button>`;
-  el('qbtns').innerHTML = hints.map(([label], i) =>
-    `<button class="qbtn" onclick="_qClick(${i})">${label}</button>`
-  ).join('') + finBtn + `<button class="qbtn red" onclick="abortCase()">✕ Прервать</button>`;
+  el('qbtns').innerHTML =
+    `<button class="qbtn fin" onclick="showDiagnosisStep()">🔍 Поставить диагноз</button>` +
+    `<button class="qbtn red" onclick="abortCase()">✕ Прервать</button>`;
 }
 
 function addMsg(txt, role) {
@@ -59,10 +44,7 @@ function setQbtns(ph) {
   const b = el('qbtns');
   if (ph === 'start') {
     b.innerHTML = `
-      <button class="qbtn" onclick="quickQ('Добрый день! Присаживайтесь, пожалуйста. На что жалуетесь?')">Приветствие</button>
-      <button class="qbtn" onclick="quickQ('Расскажите, что именно вас беспокоит?')">Жалобы</button>
-      <button class="qbtn" onclick="quickQ('Как давно появились симптомы?')">Давность</button>
-      ${S.mode === 'control' ? `<button class="qbtn fin" onclick="showDiagnosisStep()">🔍 Поставить диагноз</button>` : `<button class="qbtn fin" onclick="finishCase()">✅ Завершить</button>`}
+      <button class="qbtn fin" onclick="showDiagnosisStep()">🔍 Поставить диагноз</button>
       <button class="qbtn red" onclick="abortCase()">✕ Прервать</button>`;
   } else if (ph === 'done') {
     b.innerHTML = `
