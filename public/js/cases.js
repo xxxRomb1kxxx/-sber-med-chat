@@ -34,8 +34,46 @@ function selectCase(id) {
   closeSB();
   goPage('chat', null);
   if (c.active && id === S.currentCaseId) { backToActive(); return; }
+  if (c.active && !S.active) { restoreCase(c); return; }
   viewCase(c);
   renderCases();
+}
+
+function restoreCase(c) {
+  const msgs = MSGS_STORE[c.id] || [];
+  S.active = true;
+  S.sid = c.sid;
+  S.currentCaseId = c.id;
+  S.selectedCaseId = c.id;
+  S.mode = c.mode;
+  S.disease = DM[c.key];
+  S.patientName = c.patientName;
+  S.displayIcon = c.patientIcon;
+  S.qCount = msgs.filter(m => m.role === 'user').length;
+  S.diagMode = false;
+  S.lastBotMsgs = [];
+  S.t0 = Date.now();
+  clearInterval(S.tmr);
+  S.tmr = setInterval(() => {
+    const sec = Math.floor((Date.now() - S.t0) / 1000);
+    const m = Math.floor(sec / 60), s = sec % 60;
+    el('ppDur').textContent = m > 0 ? `${m} мин${s > 0 ? ' ' + s + ' сек' : ''}` : `${s} сек`;
+  }, 1000);
+  const d = S.disease;
+  const icon = S.displayIcon;
+  el('ppAv').textContent = icon;
+  el('ppName').textContent = S.patientName || d?.patient || 'Пациент';
+  el('ppMeta').textContent = d?.age ? `${d.age} лет · ${d.gender}` : '—';
+  el('ppDisease').textContent = c.mode === 'control' ? '❓ Поставьте диагноз' : `${d?.icon || ''} ${d?.name || ''}`;
+  el('ppMode').textContent = c.mode === 'control' ? 'Контроль' : 'Тренировка';
+  const ppFin = el('ppFinBtn');
+  if (c.mode === 'control') { ppFin.textContent = '🔍 Поставить диагноз'; ppFin.onclick = showDiagnosisStep; }
+  else { ppFin.textContent = '✅ Завершить кейс'; ppFin.onclick = finishCase; }
+  el('ppQ').textContent = String(S.qCount);
+  el('ppFill').style.width = Math.min(10 + S.qCount * 9, 95) + '%';
+  el('pAvatar').textContent = icon;
+  backToActive();
+  showToast('Сессия восстановлена — продолжите консультацию');
 }
 
 function viewCase(c) {
@@ -76,6 +114,9 @@ function viewCase(c) {
       ? `<button class="qbtn" style="background:#c0392b;border-color:#c0392b;color:#fff" onclick="abortOrphan(${c.id})">🗑 Прервать сессию</button>`
       : `<button class="qbtn" onclick="openModal()">🎯 Новый кейс</button>`}`;
   _stopRec(true);
+  el('msgInput').disabled = true;
+  el('sendBtn').disabled = true;
+  el('micBtn').disabled = true;
   el('msgInput').placeholder = 'Режим просмотра истории';
   scrollB();
 }
@@ -98,6 +139,9 @@ function backToActive() {
     el('chatActive').classList.add('hidden');
     return;
   }
+  el('msgInput').disabled = false;
+  el('sendBtn').disabled = false;
+  el('micBtn').disabled = false;
   el('pName').textContent = S.patientName || S.disease?.patient || '';
   el('pStatus').textContent = S.mode === 'control'
     ? 'Ожидает вопроса · Диагноз неизвестен'
