@@ -182,6 +182,16 @@ html, body { height: 100%; overflow: hidden; font-family: -apple-system, BlinkMa
 .mbtn svg { width: 18px; height: 18px; }
 .mbtn.recording { color: #C62828; animation: micPulse 1s ease-in-out infinite; }
 .mbtn:disabled { opacity: .4; cursor: default; pointer-events: none; }
+.rec-cancel { display: none; align-items: center; gap: 6px; height: 38px; padding: 0 10px; margin-right: 2px; border: none; border-radius: 19px; background: transparent; cursor: pointer; font-family: inherit; font-size: 13px; color: var(--gray-t); flex-shrink: 0; white-space: nowrap; transition: transform .1s, opacity .1s; }
+.rec-cancel:hover { background: #FFEBEE; color: #C62828; }
+.iwrap.rec .rec-cancel { display: flex; animation: recIn .2s ease-out; }
+.iwrap.rec.hold .rec-cancel { pointer-events: none; }
+.iwrap.rec.cancel-armed .rec-cancel { color: #C62828; }
+.rec-dot { width: 8px; height: 8px; border-radius: 50%; background: #E53935; animation: recBlink 1s ease-in-out infinite; }
+.rec-time { font-variant-numeric: tabular-nums; color: var(--dark); }
+.mbtn { touch-action: none; user-select: none; -webkit-user-select: none; }
+@keyframes recIn { from { opacity: 0; transform: translateX(8px); } to { opacity: 1; transform: translateX(0); } }
+@keyframes recBlink { 0%,100% { opacity: 1; } 50% { opacity: .25; } }
 @keyframes micPulse {
   0%,100% { box-shadow: 0 0 0 0 rgba(198,40,40,.35); background: #FFEBEE; }
   50%      { box-shadow: 0 0 0 7px rgba(198,40,40,0); background: #FFCDD2; }

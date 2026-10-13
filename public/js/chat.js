@@ -60,6 +60,7 @@ async function sendMsg() {
   const txt = inp.value.trim();
   if (!txt || !S.active) return;
   if (_sending) { showToast('Подождите ответа пациента'); return; }
+  _stopRec(true);
   if (S.diagMode) { inp.value = ''; inp.style.height = ''; await submitDiag(txt); return; }
   inp.value = ''; inp.style.height = ''; el('sendBtn').disabled = true;
   _sending = true;
